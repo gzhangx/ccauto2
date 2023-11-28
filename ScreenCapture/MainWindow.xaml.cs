@@ -152,6 +152,7 @@ namespace WPFCaptureSample
         bool captureOne = false;
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            btnTest.IsEnabled = false;
             //ConvertToBitmap(sample.Visual);
             captureOne = true;
         }
@@ -162,7 +163,11 @@ namespace WPFCaptureSample
             {
                 captureOne = false;
                 var tbf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface);                
-                File.WriteAllBytes("d:\\segan\\input\\test.png", tbf);               
+                File.WriteAllBytes("d:\\segan\\input\\test.png", tbf);
+                await Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    btnTest.IsEnabled = true;
+                }));
             }
         }
     }
