@@ -156,37 +156,13 @@ namespace WPFCaptureSample
             captureOne = true;
         }
 
-        void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
+        async void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
         {
             if (captureOne)
             {
-                //captureOne = false;
-                //MainCaptureCreator.ConvertSurfaceToPngCall(surface).ContinueWith(tbf =>
-                //{
-                //    File.WriteAllBytes("d:\\segan\\input\\test.png", tbf.Result);
-                //});
-
-            }
-
-            if (captureOne)
-            {
                 captureOne = false;
-                SoftwareBitmap.CreateCopyFromSurfaceAsync(surface).AsTask().ContinueWith(async t =>
-                {
-
-                    using (var memoryStream = new MemoryStream())
-                    {
-                        BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, memoryStream.AsRandomAccessStream());
-
-                        // Set the software bitmap
-                        encoder.SetSoftwareBitmap(t.Result);
-
-
-                        await encoder.FlushAsync();
-                        File.WriteAllBytes("d:\\temp\\test.png", memoryStream.ToArray());
-                    }
-                    //t.Result.                    
-                });
+                var tbf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface);                
+                File.WriteAllBytes("d:\\segan\\input\\test.png", tbf);               
             }
         }
     }

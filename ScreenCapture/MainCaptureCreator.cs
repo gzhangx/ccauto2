@@ -84,14 +84,14 @@ namespace WPFCaptureSample
 
         public static async Task<byte[]> ConvertSurfaceToPngCall(IDirect3DSurface surface)
         {
-            using (var t = await SoftwareBitmap.CreateCopyFromSurfaceAsync(surface).AsTask())
+            using (var t = await SoftwareBitmap.CreateCopyFromSurfaceAsync(surface).AsTask().ConfigureAwait(false))
             {
                 using (var memoryStream = new MemoryStream())
                 {
-                    BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, memoryStream.AsRandomAccessStream());
+                    BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.PngEncoderId, memoryStream.AsRandomAccessStream()).AsTask().ConfigureAwait(false);
                     // Set the software bitmap
                     encoder.SetSoftwareBitmap(t);
-                    await encoder.FlushAsync();
+                    await encoder.FlushAsync().AsTask().ConfigureAwait(false);
                     return memoryStream.ToArray();
                 }
             }
