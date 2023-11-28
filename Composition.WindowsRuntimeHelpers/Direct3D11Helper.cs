@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
-
+//from https://github.com/microsoft/Windows.UI.Composition-Win32-Samples
 using System;
 using System.Runtime.InteropServices;
 using Windows.Graphics.DirectX.Direct3D11;

@@ -51,14 +51,6 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button x:Name="PrimaryMonitorButton" Content="Use Primary Monitor" Click="PrimaryMonitorButton_Click" Margin="10" />
-                <ComboBox x:Name="MonitorComboBox" Margin="10" SelectionChanged="MonitorComboBox_SelectionChanged">
-                    <ComboBox.ItemTemplate>
-                        <DataTemplate>
-                            <TextBlock Text="{Binding DeviceName}" />
-                        </DataTemplate>
-                    </ComboBox.ItemTemplate>
-                </ComboBox>
                 <Button Click="Button_Click">test</Button>
             </StackPanel>
             <Button x:Name="StopButton" Grid.Row="1" Content="Stop Capturing" Click="StopButton_Click" Margin="10" />

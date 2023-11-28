@@ -21,7 +21,7 @@
 //  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //  THE SOFTWARE.
 //  ---------------------------------------------------------------------------------
-
+// from https://github.com/microsoft/Windows.UI.Composition-Win32-Samples
 using Composition.WindowsRuntimeHelpers;
 using System;
 using System.Numerics;
