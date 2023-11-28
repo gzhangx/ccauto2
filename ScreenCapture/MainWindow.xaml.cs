@@ -30,6 +30,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -47,14 +48,10 @@ namespace WPFCaptureSample
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window, BasicCapture.AskCopy
-    {
-        private IntPtr hwnd;
-        private Compositor compositor;
-        private CompositionTarget target;
-        private ContainerVisual root;
-
-        private BasicSampleApplication sample;
+    {        
         private ObservableCollection<Process> processes;
+
+        private MainCaptureCreator creator = new MainCaptureCreator();
 
         public MainWindow()
         {
@@ -68,17 +65,16 @@ namespace WPFCaptureSample
 
         private async void PickerButton_Click(object sender, RoutedEventArgs e)
         {
-            StopCapture();
+            creator.StopCapture();
             WindowComboBox.SelectedIndex = -1;
-            await StartPickerCaptureAsync();
+            await creator.StartPickerCaptureAsync();
         }
 
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            var interopWindow = new WindowInteropHelper(this);
-            hwnd = interopWindow.Handle;
-
+            //var interopWindow = new WindowInteropHelper(this);
+            //hwnd = interopWindow.Handle;            
             var presentationSource = PresentationSource.FromVisual(this);
             double dpiX = 1.0;
             double dpiY = 1.0;
@@ -88,14 +84,15 @@ namespace WPFCaptureSample
                 dpiY = presentationSource.CompositionTarget.TransformToDevice.M22;
             }
             var controlsWidth = (float)(ControlsGrid.ActualWidth * dpiX);
-
-            InitComposition(controlsWidth);
+            creator.init(this, controlsWidth, this);
+            //InitComposition(controlsWidth + 100);
+            //InitComposition(0);
             InitWindowList();
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            StopCapture();
+            creator.StopCapture();
             WindowComboBox.SelectedIndex = -1;
         }
 
@@ -106,11 +103,11 @@ namespace WPFCaptureSample
 
             if (process != null)
             {
-                StopCapture();
+                creator.StopCapture();
                 var hwnd = process.MainWindowHandle;
                 try
                 {
-                    StartHwndCapture(hwnd);
+                    this.creator.StartHwndCapture(hwnd);
                 }
                 catch (Exception)
                 {
@@ -121,52 +118,6 @@ namespace WPFCaptureSample
             }
         }
 
-
-        private void InitComposition(float controlsWidth)
-        {
-            // Create the compositor.
-            compositor = new Compositor();
-
-            // Create a target for the window.
-            target = compositor.CreateDesktopWindowTarget(hwnd, true);
-
-            // Attach the root visual.
-            root = compositor.CreateContainerVisual();
-            root.RelativeSizeAdjustment = Vector2.One;
-            root.Size = new Vector2(-controlsWidth, 0);
-            root.Offset = new Vector3(controlsWidth, 0, 0);
-            target.Root = root;
-
-            // Setup the rest of the sample application.
-            sample = new BasicSampleApplication(compositor);
-            root.Children.InsertAtTop(sample.Visual);
-        }
-
-        public static System.Windows.Media.Imaging.RenderTargetBitmap ConvertToBitmap(UIElement uiElement)
-        {
-            //double resolution
-            var scale = 1;// resolution / 96d;
-
-            uiElement.Measure(new Size(Double.PositiveInfinity, Double.PositiveInfinity));
-            var sz = uiElement.DesiredSize;
-            var rect = new Rect(sz);
-            uiElement.Arrange(rect);
-
-            var bmp = new System.Windows.Media.Imaging.RenderTargetBitmap((int)(scale * (rect.Width)), (int)(scale * (rect.Height)), scale * 96, scale * 96, System.Windows.Media.PixelFormats.Default);
-            bmp.Render(uiElement);
-
-            var bmpFrame = System.Windows.Media.Imaging.BitmapFrame.Create(bmp);
-            var en = new System.Windows.Media.Imaging.PngBitmapEncoder();
-
-            en.Frames.Add(bmpFrame);
-            using (var memoryStream = new MemoryStream())
-            {
-                en.Save(memoryStream);
-                File.WriteAllBytes("d:\\temp\\test.png", memoryStream.ToArray());
-            }
-            
-            return bmp;
-        }
 
         private void InitWindowList()
         {
@@ -191,32 +142,12 @@ namespace WPFCaptureSample
         }
 
 
-        private async Task StartPickerCaptureAsync()
-        {
-            var picker = new GraphicsCapturePicker();
-            picker.SetWindow(hwnd);
-            GraphicsCaptureItem item = await picker.PickSingleItemAsync();
+        
 
-            if (item != null)
-            {
-                sample.StartCaptureFromItem(item, this);
-            }
-        }
-
-        private void StartHwndCapture(IntPtr hwnd)
-        {
-            GraphicsCaptureItem item = CaptureHelper.CreateItemForWindow(hwnd);
-            if (item != null)
-            {
-                sample.StartCaptureFromItem(item, this);
-            }
-        }        
+                
 
 
-        private void StopCapture()
-        {
-            sample.StopCapture();
-        }
+        
 
         bool captureOne = false;
         private void Button_Click(object sender, RoutedEventArgs e)
@@ -227,11 +158,22 @@ namespace WPFCaptureSample
 
         void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
         {
-            if (captureOne){
+            if (captureOne)
+            {
+                //captureOne = false;
+                //MainCaptureCreator.ConvertSurfaceToPngCall(surface).ContinueWith(tbf =>
+                //{
+                //    File.WriteAllBytes("d:\\segan\\input\\test.png", tbf.Result);
+                //});
+
+            }
+
+            if (captureOne)
+            {
                 captureOne = false;
                 SoftwareBitmap.CreateCopyFromSurfaceAsync(surface).AsTask().ContinueWith(async t =>
                 {
-                    
+
                     using (var memoryStream = new MemoryStream())
                     {
                         BitmapEncoder encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, memoryStream.AsRandomAccessStream());
@@ -239,12 +181,11 @@ namespace WPFCaptureSample
                         // Set the software bitmap
                         encoder.SetSoftwareBitmap(t.Result);
 
-                                                
+
                         await encoder.FlushAsync();
                         File.WriteAllBytes("d:\\temp\\test.png", memoryStream.ToArray());
                     }
-                    
-                    //t.Result.
+                    //t.Result.                    
                 });
             }
         }
