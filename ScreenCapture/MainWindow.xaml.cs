@@ -23,23 +23,17 @@
 //  ---------------------------------------------------------------------------------
 
 using CaptureSampleCore;
-using Composition.WindowsRuntimeHelpers;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Interop;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Capture;
 using Windows.Graphics.DirectX.Direct3D11;
-using Windows.Graphics.Imaging;
-using Windows.UI.Composition;
+
 
 
 namespace WPFCaptureSample
@@ -103,18 +97,7 @@ namespace WPFCaptureSample
 
             if (process != null)
             {
-                creator.StopCapture();
-                var hwnd = process.MainWindowHandle;
-                try
-                {
-                    this.creator.StartHwndCapture(hwnd);
-                }
-                catch (Exception)
-                {
-                    Debug.WriteLine($"Hwnd 0x{hwnd.ToInt32():X8} is not valid for capture!");
-                    processes.Remove(process);
-                    comboBox.SelectedIndex = -1;
-                }
+                
             }
         }
 
@@ -133,6 +116,16 @@ namespace WPFCaptureSample
                 if (processes.Count == 1)
                 {
                     WindowComboBox.SelectedIndex = 0;
+                    creator.StopCapture();
+                    var hwnd = processesWithWindows.First().MainWindowHandle;
+                    try
+                    {
+                        creator.StartHwndCapture(hwnd);
+                    }
+                    catch (Exception)
+                    {
+                        Debug.WriteLine($"Hwnd 0x{hwnd.ToInt32():X8} is not valid for capture!");                        
+                    }
                 } 
             }
             else
