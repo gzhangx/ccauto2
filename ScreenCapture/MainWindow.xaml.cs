@@ -28,6 +28,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using Windows.Foundation.Metadata;
@@ -42,7 +43,8 @@ namespace WPFCaptureSample
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window, BasicCapture.AskCopy
-    {        
+    {
+        const string BSAP_WindowName = "BlueStacks App Player";
         private ObservableCollection<Process> processes;
 
         private MainCaptureCreator creator = new MainCaptureCreator();
@@ -81,13 +83,22 @@ namespace WPFCaptureSample
             creator.init(this, controlsWidth, this);
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
-            InitWindowList();
+            InitWindowListAndStart();
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            creator.StopCapture();
-            WindowComboBox.SelectedIndex = -1;
+            var curText = StopButton.Content as string;
+            if (String.Equals(curText, "Stop Capture"))
+            {
+                creator.StopCapture();
+                WindowComboBox.SelectedIndex = -1;
+                StopButton.Content = "Start Capture";                
+            }
+            else
+            {
+                InitWindowListAndStart();
+            }
         }
 
         private void WindowComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -102,14 +113,14 @@ namespace WPFCaptureSample
         }
 
 
-        private void InitWindowList()
+        private void InitWindowListAndStart()
         {
             if (ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
             {
                 var pp = Process.GetProcesses();
                 var processesWithWindows = from p in Process.GetProcesses()
                                            where !string.IsNullOrWhiteSpace(p.MainWindowTitle) && WindowEnumerationHelper.IsWindowValidForCapture(p.MainWindowHandle)
-                                           && string.Equals(p.MainWindowTitle, "BlueStacks App Player")
+                                           && string.Equals(p.MainWindowTitle, BSAP_WindowName)
                                            select p;
                 processes = new ObservableCollection<Process>(processesWithWindows);
                 WindowComboBox.ItemsSource = processes;
@@ -121,6 +132,7 @@ namespace WPFCaptureSample
                     try
                     {
                         creator.StartHwndCapture(hwnd);
+                        StopButton.Content = "Stop Capture";
                     }
                     catch (Exception)
                     {
@@ -145,7 +157,7 @@ namespace WPFCaptureSample
         bool captureOne = false;
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            btnTest.IsEnabled = false;
+            btnCaptureAndSeg.IsEnabled = false;
             //ConvertToBitmap(sample.Visual);
             captureOne = true;
         }
@@ -164,7 +176,7 @@ namespace WPFCaptureSample
                 Console.WriteLine("cmd.exe /c " + command);
                 await Dispatcher.BeginInvoke(new Action(() =>
                 {
-                    btnTest.IsEnabled = true;
+                    btnCaptureAndSeg.IsEnabled = true;
                 }));
             }
         }
@@ -184,6 +196,27 @@ namespace WPFCaptureSample
 
             ExitCode = Process.ExitCode;
             //Process.Close();
+        }
+
+        private void btnTest_Click(object sender, RoutedEventArgs e)
+        {
+            //Task.Run(() =>
+            {
+                System.Threading.Thread.Sleep(3000);
+                var wnd = Win32Helper.FindWindow(null, BSAP_WindowName);
+                Win32Helper.SetForegroundWindow(wnd);
+                //System.Windows.Forms.SendKeys.SendWait("DDD");
+                for (int i = 0; i < 3; i++)
+                {
+                    Console.WriteLine("sending");
+                    Win32Helper.SendKey(0x11);
+                    System.Threading.Thread.Sleep(1000);
+                    Console.WriteLine("Done sending");
+                }
+            }
+            //);
+            
+
         }
     }
 }

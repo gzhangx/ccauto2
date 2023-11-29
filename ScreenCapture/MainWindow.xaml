@@ -51,7 +51,8 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
-                <Button Click="Button_Click" x:Name="btnTest">test</Button>
+                <Button Click="Button_Click" x:Name="btnCaptureAndSeg">Capture And Seg</Button>
+                <Button Click="btnTest_Click" x:Name="btnTest">Test Keys</Button>
             </StackPanel>
             <Button x:Name="StopButton" Grid.Row="1" Content="Stop Capturing" Click="StopButton_Click" Margin="10" />
         </Grid>
