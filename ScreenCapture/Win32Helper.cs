@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using static System.Runtime.CompilerServices.RuntimeHelpers;
 
 namespace WPFCaptureSample
 {
@@ -95,8 +96,24 @@ namespace WPFCaptureSample
         private static extern IntPtr GetMessageExtraInfo();
 
 
-        public static void SendKey(ushort scanKey)
+        [DllImport("user32.dll")]
+        public static extern bool GetCursorPos(out POINT lpPoint);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct POINT
         {
+            public int X;
+            public int Y;
+        }
+        [DllImport("User32.dll")]
+        public static extern bool SetCursorPos(int x, int y);
+
+        [DllImport("user32.dll")]
+        public static extern UInt32 MapVirtualKey(UInt32 uCode, UInt32 uMapType);
+
+        public static void SendKey(ushort vk)
+        {
+            var scan = vk; // (UInt16)(MapVirtualKey((UInt32)vk, 0) & 0xFFU);
             Input[] inputs = new Input[]
             {
                 new Input
@@ -106,10 +123,11 @@ namespace WPFCaptureSample
                     {
                         ki = new KeyboardInput
                         {
-                            wVk = 0,
-                            wScan = scanKey,
+                            wVk = vk,
+                            wScan = scan,
                             dwFlags = (uint)(KeyEventF.KeyDown | KeyEventF.Scancode),
-                            dwExtraInfo = GetMessageExtraInfo()
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo(),
                         }
                     }
                 },
@@ -120,10 +138,11 @@ namespace WPFCaptureSample
                     {
                         ki = new KeyboardInput
                         {
-                            wVk = 0,
-                            wScan = scanKey,
+                            wVk = vk,
+                            wScan = scan,
                             dwFlags = (uint)(KeyEventF.KeyUp | KeyEventF.Scancode),
-                            dwExtraInfo = GetMessageExtraInfo()
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo(),
                         }
                     }
                 }

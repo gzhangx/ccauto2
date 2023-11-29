@@ -202,14 +202,15 @@ namespace WPFCaptureSample
         {
             //Task.Run(() =>
             {
-                System.Threading.Thread.Sleep(3000);
+                
                 var wnd = Win32Helper.FindWindow(null, BSAP_WindowName);
                 Win32Helper.SetForegroundWindow(wnd);
+                System.Threading.Thread.Sleep(3000);
                 //System.Windows.Forms.SendKeys.SendWait("DDD");
                 for (int i = 0; i < 3; i++)
                 {
                     Console.WriteLine("sending");
-                    Win32Helper.SendKey(0x11);
+                    Win32Helper.SendKey('D');
                     System.Threading.Thread.Sleep(1000);
                     Console.WriteLine("Done sending");
                 }
