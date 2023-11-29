@@ -162,13 +162,35 @@ namespace WPFCaptureSample
             if (captureOne)
             {
                 captureOne = false;
-                var tbf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface);                
-                File.WriteAllBytes("d:\\segan\\input\\test.png", tbf);
+                var tbf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface);
+                var tmStr = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
+                var fileName = "d:\\segan\\out\\test\\test" + tmStr + ".png";
+                File.WriteAllBytes(fileName, tbf);
+                var command = "d:\\segan\\testwithfile.bat " + fileName;
+                ExecuteCmd(command);
+                Console.WriteLine("cmd.exe /c " + command);
                 await Dispatcher.BeginInvoke(new Action(() =>
                 {
                     btnTest.IsEnabled = true;
                 }));
             }
+        }
+
+        void ExecuteCmd(string command)
+        {
+            int ExitCode;
+            ProcessStartInfo ProcessInfo;
+            Process Process;
+
+            ProcessInfo = new ProcessStartInfo("cmd.exe", "/c " + command);
+            ProcessInfo.CreateNoWindow = false;
+            ProcessInfo.UseShellExecute = true;
+
+            Process = Process.Start(ProcessInfo);
+            Process.WaitForExit();
+
+            ExitCode = Process.ExitCode;
+            //Process.Close();
         }
     }
 }
