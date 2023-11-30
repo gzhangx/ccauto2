@@ -201,6 +201,7 @@ namespace WPFCaptureSample
         bool checkMouse = false;
         private void btnTest_Click(object sender, RoutedEventArgs e)
         {
+            new ImageLoader().LoadAll();
             //Task.Run(() =>
             {
                 
