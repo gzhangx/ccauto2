@@ -198,6 +198,7 @@ namespace WPFCaptureSample
             //Process.Close();
         }
 
+        bool checkMouse = false;
         private void btnTest_Click(object sender, RoutedEventArgs e)
         {
             //Task.Run(() =>
@@ -205,18 +206,49 @@ namespace WPFCaptureSample
                 
                 var wnd = Win32Helper.FindWindow(null, BSAP_WindowName);
                 Win32Helper.SetForegroundWindow(wnd);
-                System.Threading.Thread.Sleep(3000);
+                System.Threading.Thread.Sleep(1000);
                 //System.Windows.Forms.SendKeys.SendWait("DDD");
-                for (int i = 0; i < 3; i++)
-                {
-                    Console.WriteLine("sending");
-                    Win32Helper.SendKey('D');
-                    System.Threading.Thread.Sleep(1000);
-                    Console.WriteLine("Done sending");
-                }
+
+                Win32Helper.SendKey('W', 0, true);
+                System.Threading.Thread.Sleep(100);
+                Win32Helper.SendKey('W', 0, false);
+
+                Win32Helper.Rect rect = new Win32Helper.Rect();
+                Win32Helper.GetWindowRect(wnd, ref rect);
+                Win32Helper.SetCursorPos(rect.Left, rect.Top);
             }
             //);
-            
+
+            if (!checkMouse)
+            {
+                checkMouse = true;
+                Task.Run(() =>
+                {
+                    int count = 0;
+                    while(checkMouse)
+                    {
+                        System.Threading.Thread.Sleep(100);
+                        Win32Helper.POINT pt = new Win32Helper.POINT();
+                        Win32Helper.GetCursorPos(out pt);
+
+                        
+                        count++;
+                        if (count >  10) {
+                            pt.X++;
+                            count = 0;
+                            Win32Helper.SetCursorPos(pt.X, pt.Y);
+                        }
+                        Dispatcher.Invoke(() =>
+                        {
+                            txtInfo.Text = "pt" + pt.X + "," + pt.Y;
+                        });
+                    }
+
+                });
+            } else
+            {
+                checkMouse = false;
+            }
 
         }
     }

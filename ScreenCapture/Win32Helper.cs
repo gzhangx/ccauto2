@@ -109,11 +109,39 @@ namespace WPFCaptureSample
         public static extern bool SetCursorPos(int x, int y);
 
         [DllImport("user32.dll")]
+        public static extern bool GetWindowRect(IntPtr hwnd, ref Rect rectangle);
+
+        public struct Rect
+        {
+            public int Left { get; set; }
+            public int Top { get; set; }
+            public int Right { get; set; }
+            public int Bottom { get; set; }
+        }
+
+        [DllImport("user32.dll")]
         public static extern UInt32 MapVirtualKey(UInt32 uCode, UInt32 uMapType);
 
-        public static void SendKey(ushort vk)
+        const uint SCAN_VK_CONTROL = 0x11;
+        const uint SCAN_VK_LCONTROL = 0xA2; ///A3 rcontrol
+        const uint SCAN_VK_LSHIFT = 0xA0;
+
+        //VK_Shift 0x10
+        //VK_RSHIFT 0xA1
+        public static void SendKey(ushort vk, ushort scan, bool isKeyDown)
         {
-            var scan = vk; // (UInt16)(MapVirtualKey((UInt32)vk, 0) & 0xFFU);
+            uint flag = (uint)(isKeyDown?KeyEventF.KeyDown: KeyEventF.KeyUp);
+            if (scan != 0)
+            {
+                var oldScan = scan;
+                scan = (UInt16)(MapVirtualKey((UInt32)scan, 0) & 0xFFU);
+                flag |= (uint)KeyEventF.Scancode;
+                Console.WriteLine("from " + oldScan.ToString("X") + " to " + scan.ToString("X"));
+            }
+            else
+            {
+                flag |= (uint)KeyEventF.Unicode;
+            }            
             Input[] inputs = new Input[]
             {
                 new Input
@@ -125,22 +153,7 @@ namespace WPFCaptureSample
                         {
                             wVk = vk,
                             wScan = scan,
-                            dwFlags = (uint)(KeyEventF.KeyDown | KeyEventF.Scancode),
-                            time = 0,
-                            dwExtraInfo = GetMessageExtraInfo(),
-                        }
-                    }
-                },
-                new Input
-                {
-                    type = (int)InputType.Keyboard,
-                    u = new InputUnion
-                    {
-                        ki = new KeyboardInput
-                        {
-                            wVk = vk,
-                            wScan = scan,
-                            dwFlags = (uint)(KeyEventF.KeyUp | KeyEventF.Scancode),
+                            dwFlags = flag,//(uint)(KeyEventF.KeyDown | KeyEventF.Scancode),
                             time = 0,
                             dwExtraInfo = GetMessageExtraInfo(),
                         }
