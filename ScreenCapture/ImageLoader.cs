@@ -23,7 +23,7 @@ namespace WPFCaptureSample
     }
     internal class ImageLoader
     {
-        System.Collections.Generic.List<ImageStore> stores = new System.Collections.Generic.List<ImageStore>();
+        public System.Collections.Generic.List<ImageStore> stores = new System.Collections.Generic.List<ImageStore>();
         public ImageLoader() { }
 
         public void LoadAll()
@@ -54,7 +54,9 @@ namespace WPFCaptureSample
             var cropSrc = new Mat(src, stored.rect);
             var output = new Mat();
             CvInvoke.Compare(cropSrc, stored.image, output, Emgu.CV.CvEnum.CmpType.Equal);
-            int diffs = CvInvoke.CountNonZero(output);
+            var r = new Mat();
+            CvInvoke.CvtColor(output, r, Emgu.CV.CvEnum.ColorConversion.Rgb2Gray);
+            int diffs = CvInvoke.CountNonZero(r);
             return diffs*1.0/(stored.rect.Width*stored.rect.Height);
         }
 
@@ -67,7 +69,7 @@ namespace WPFCaptureSample
         public static Mat bufToMat(byte[] buf)
         {
             Mat omat = new Mat();
-            CvInvoke.Imdecode(buf, Emgu.CV.CvEnum.ImreadModes.AnyDepth, omat);
+            CvInvoke.Imdecode(buf, Emgu.CV.CvEnum.ImreadModes.Color, omat);
             return omat;
         }
     }

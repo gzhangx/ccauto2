@@ -124,7 +124,11 @@
       <Version>10.0.18362.2002-preview</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="images\AnyoneThereReload%28296,259,430,122%29_crop.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
   <ItemGroup>
     <None Include="images\BuilderBase_ReturnHome%28445,492,133,53%29.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

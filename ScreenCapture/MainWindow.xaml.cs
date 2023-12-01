@@ -322,6 +322,13 @@ namespace WPFCaptureSample
                     canvImg.Source = bitmapimage;
                 }
             });
+
+            var src = ImageLoader.bufToMat(buf);
+            foreach (var store in imageStore.stores)
+            {
+                var diff = ImageLoader.CompareToMat(src, store);
+                Console.WriteLine("for " + store.name + " diff=" + diff);
+            }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
