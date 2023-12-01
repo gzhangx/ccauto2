@@ -81,14 +81,14 @@ namespace WPFCaptureSample
             await creator.StartPickerCaptureAsync(this);
         }
 
-
+        double dpiX = 1.0;
+        double dpiY = 1.0;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             //var interopWindow = new WindowInteropHelper(this);
             //hwnd = interopWindow.Handle;            
             var presentationSource = PresentationSource.FromVisual(this);
-            double dpiX = 1.0;
-            double dpiY = 1.0;
+            
             if (presentationSource != null)
             {
                 dpiX = presentationSource.CompositionTarget.TransformToDevice.M11;
@@ -128,7 +128,7 @@ namespace WPFCaptureSample
             }
         }
 
-
+        private IntPtr gameWin = IntPtr.Zero;
         private void InitWindowListAndStart()
         {
             if (ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
@@ -145,6 +145,7 @@ namespace WPFCaptureSample
                     WindowComboBox.SelectedIndex = 0;
                     creator.StopCapture();
                     var hwnd = processesWithWindows.First().MainWindowHandle;
+                    gameWin = hwnd;
                     try
                     {
                         creator.StartHwndCapture(hwnd);
@@ -293,7 +294,7 @@ namespace WPFCaptureSample
         {
             while(!_needToDie)
             {
-                System.Threading.Thread.Sleep(1000);
+                System.Threading.Thread.Sleep(5000);
                 if (autoItCaptureInFlight) return;
                 if (autoItCaptureOne) return;
 
@@ -327,7 +328,24 @@ namespace WPFCaptureSample
             foreach (var store in imageStore.stores)
             {
                 var diff = ImageLoader.CompareToMat(src, store);
-                Console.WriteLine("for " + store.name + " diff=" + diff);
+                
+                if (diff > 0.9)
+                {
+                    Console.WriteLine("for " + store.name + " diff=" + diff);
+                    if (store.name.Equals("AnyoneThereReload"))
+                    {
+                        Win32Helper.Rect rect = new Win32Helper.Rect();
+                        Win32Helper.GetWindowRect(gameWin, ref rect);
+                        Win32Helper.SetCursorPos(rect.Left, rect.Top);
+                        System.Threading.Thread.Sleep(200);
+                        Console.WriteLine(rect.Left+","+rect.Top+" adding "+store.rect.Left+","+store.rect.Top);
+                        Win32Helper.SetCursorPos(rect.Left + (int)((store.rect.Left + 50)*dpiX), rect.Top+ (int)((store.rect.Top+100)*dpiY));
+                        System.Threading.Thread.Sleep(200);
+                        Console.WriteLine("moving to "+rect.Right +","+ rect.Bottom);
+                        Win32Helper.SetCursorPos(rect.Right , rect.Bottom);
+
+                    }
+                }
             }
         }
 
