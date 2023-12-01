@@ -28,6 +28,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -48,7 +49,11 @@ namespace WPFCaptureSample
         private ObservableCollection<Process> processes;
 
         private MainCaptureCreator creator = new MainCaptureCreator();
+        private ImageLoader imageStore = new ImageLoader();
+        private bool _needToDie = false;
+        private Thread _thread;
 
+        private Window imgWin = new Window();
         public MainWindow()
         {
             InitializeComponent();
@@ -57,13 +62,21 @@ namespace WPFCaptureSample
             // Force graphicscapture.dll to load.
             var picker = new GraphicsCapturePicker();
 #endif
+            imageStore.LoadAll();
+            _thread = new Thread(actionthread);
+            _thread.Start();
+
+            imgWin.Width= 500;
+            imgWin.Height= 400;
+            imgWin.Show();
         }
+
 
         private async void PickerButton_Click(object sender, RoutedEventArgs e)
         {
             creator.StopCapture();
             WindowComboBox.SelectedIndex = -1;
-            await creator.StartPickerCaptureAsync();
+            await creator.StartPickerCaptureAsync(this);
         }
 
 
@@ -80,7 +93,8 @@ namespace WPFCaptureSample
                 dpiY = presentationSource.CompositionTarget.TransformToDevice.M22;
             }
             var controlsWidth = (float)(ControlsGrid.ActualWidth * dpiX);
-            creator.init(this, controlsWidth, this);
+            controlsWidth = 0;
+            creator.init(imgWin, controlsWidth, this);
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
             InitWindowListAndStart();
@@ -162,8 +176,27 @@ namespace WPFCaptureSample
             captureOne = true;
         }
 
+        bool autoItCaptureOne = false;
+        bool autoItCaptureInFlight = false;
+        byte[] autoItCapturedData = null;
+        static readonly object syncObj = new object();
         async void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
         {
+            byte[] autoItBuf = null;
+            if (autoItCaptureOne)
+            {
+                autoItCaptureOne = false;
+                autoItCaptureInFlight = true;
+                autoItBuf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface).ConfigureAwait(false);
+            }
+            lock (syncObj)
+            {
+                if (autoItBuf!= null)
+                {
+                    autoItCaptureInFlight = false;
+                    autoItCapturedData = autoItBuf;
+                }   
+            }
             if (captureOne)
             {
                 captureOne = false;
@@ -201,7 +234,7 @@ namespace WPFCaptureSample
         bool checkMouse = false;
         private void btnTest_Click(object sender, RoutedEventArgs e)
         {
-            new ImageLoader().LoadAll();
+            //new ImageLoader().LoadAll();
             //Task.Run(() =>
             {
                 
@@ -251,6 +284,34 @@ namespace WPFCaptureSample
                 checkMouse = false;
             }
 
+        }
+
+
+        private void actionthread()
+        {
+            while(!_needToDie)
+            {
+                System.Threading.Thread.Sleep(1000);
+                if (autoItCaptureInFlight) return;
+                if (autoItCaptureOne) return;
+
+                if (autoItCapturedData != null)
+                {
+                    processBuffer(autoItCapturedData);
+                }
+                autoItCaptureOne = true;
+            }
+        }
+
+        private void processBuffer(byte[] buf)
+        {
+
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            _needToDie = true;
+            _thread.Join();
         }
     }
 }

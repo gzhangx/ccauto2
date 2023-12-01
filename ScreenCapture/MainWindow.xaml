@@ -30,6 +30,7 @@
         xmlns:local="clr-namespace:WPFCaptureSample"
         mc:Ignorable="d"
         Title="WPF Capture Sample" Height="450" Width="800"
+        Closing="Window_Closing"
         Loaded="Window_Loaded">
     <Grid>
         <Grid.ColumnDefinitions>

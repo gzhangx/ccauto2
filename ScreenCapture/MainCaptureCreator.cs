@@ -17,7 +17,6 @@ namespace WPFCaptureSample
 {
     public class MainCaptureCreator
     {
-        private IntPtr mainHwnd;
         private Compositor compositor;
         private CompositionTarget target;
         private ContainerVisual root;
@@ -30,11 +29,10 @@ namespace WPFCaptureSample
         public void init(Window window, float offset, BasicCapture.AskCopy ask)
         {
             var interopWindow = new WindowInteropHelper(window);
-            mainHwnd = interopWindow.Handle;
-            InitComposition(offset);
+            InitComposition(interopWindow.Handle, offset);
             this.ask = ask;
         }
-        private void InitComposition(float offset)
+        private void InitComposition(IntPtr mainHwnd, float offset)
         {
             // Create the compositor.
             compositor = new Compositor();
@@ -60,11 +58,12 @@ namespace WPFCaptureSample
             sample.StopCapture();
         }
 
-        public async Task StartPickerCaptureAsync()
+        public async Task StartPickerCaptureAsync(Window window)
         {
+            var interopWindow = new WindowInteropHelper(window);
             StopCapture();
             var picker = new GraphicsCapturePicker();
-            picker.SetWindow(mainHwnd);
+            picker.SetWindow(interopWindow.Handle);
             GraphicsCaptureItem item = await picker.PickSingleItemAsync();
 
             if (item != null)
@@ -82,6 +81,7 @@ namespace WPFCaptureSample
             }
         }
 
+        //matchTemplate, minMaxLoc
         public static async Task<byte[]> ConvertSurfaceToPngCall(IDirect3DSurface surface)
         {
             using (var t = await SoftwareBitmap.CreateCopyFromSurfaceAsync(surface).AsTask().ConfigureAwait(false))

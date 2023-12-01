@@ -5,14 +5,21 @@ using System.Drawing;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Documents;
+using System.Windows.Markup;
 
 namespace WPFCaptureSample
 {
     public class ImageStore
     {
-        public string name;
-        public Emgu.CV.Mat image;
-        public Rectangle rect;
+        public string name { get; private set; }
+        public Emgu.CV.Mat image { get; private set; }
+        public Rectangle rect { get; private set; }
+        public ImageStore(string name, Mat image, Rectangle rect)
+        {
+            this.name = name;
+            this.image = image;
+            this.rect = rect;
+        }
     }
     internal class ImageLoader
     {
@@ -33,17 +40,35 @@ namespace WPFCaptureSample
                 var rec = new Rectangle(int.Parse(poss[0]), int.Parse(poss[1]),
                     int.Parse(poss[2]), int.Parse(poss[3]));
 
-                var store = new ImageStore
-                {
-                    name = name,
-                    image = img,
-                    rect = rec,
-                };
+                var store = new ImageStore(name, img, rec);                
                 stores.Add(store);
                 //var croped= new Mat(img, new Rectangle(10, 10, 100, 20));
                 //CvInvoke.Imwrite("test.png", croped);
             }
 
+        }
+
+
+        public static double CompareToMat(Mat src, ImageStore stored)
+        {
+            var cropSrc = new Mat(src, stored.rect);
+            var output = new Mat();
+            CvInvoke.Compare(cropSrc, stored.image, output, Emgu.CV.CvEnum.CmpType.Equal);
+            int diffs = CvInvoke.CountNonZero(output);
+            return diffs*1.0/(stored.rect.Width*stored.rect.Height);
+        }
+
+        public double CompareFromArray(byte[] data, ImageStore stored)
+        {
+            Mat omat = new Mat();
+            CvInvoke.Imdecode(data, Emgu.CV.CvEnum.ImreadModes.AnyDepth, omat);
+            return CompareToMat(omat, stored);
+        }
+        public static Mat bufToMat(byte[] buf)
+        {
+            Mat omat = new Mat();
+            CvInvoke.Imdecode(buf, Emgu.CV.CvEnum.ImreadModes.AnyDepth, omat);
+            return omat;
         }
     }
 }
