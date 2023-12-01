@@ -61,6 +61,7 @@
 
         <Grid Grid.Column="1">
             <Rectangle Fill="WhiteSmoke" />
+            <Image x:Name="canvImg"></Image>
         </Grid>
     </Grid>
 </Window>

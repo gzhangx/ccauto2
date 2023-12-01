@@ -32,6 +32,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 using Windows.Foundation.Metadata;
 using Windows.Graphics.Capture;
 using Windows.Graphics.DirectX.Direct3D11;
@@ -66,9 +67,10 @@ namespace WPFCaptureSample
             _thread = new Thread(actionthread);
             _thread.Start();
 
-            imgWin.Width= 500;
-            imgWin.Height= 400;
+            imgWin.Width= 20;
+            imgWin.Height= 20;
             imgWin.Show();
+            //imgWin.Hide();
         }
 
 
@@ -305,13 +307,28 @@ namespace WPFCaptureSample
 
         private void processBuffer(byte[] buf)
         {
-
+            if (_needToDie) return;
+            Dispatcher.Invoke(() =>
+            {
+                if (_needToDie) return;
+                using (MemoryStream memory = new MemoryStream(buf))
+                {
+                    memory.Position = 0;
+                    BitmapImage bitmapimage = new BitmapImage();
+                    bitmapimage.BeginInit();
+                    bitmapimage.StreamSource = memory;
+                    bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                    bitmapimage.EndInit();
+                    canvImg.Source = bitmapimage;
+                }
+            });
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             _needToDie = true;
             _thread.Join();
+            imgWin.Close();
         }
     }
 }
