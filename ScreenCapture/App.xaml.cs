@@ -26,7 +26,7 @@ using Composition.WindowsRuntimeHelpers;
 using System.Windows;
 using Windows.System;
 
-namespace WPFCaptureSample
+namespace ccAuto2
 {
     /// <summary>
     /// Interaction logic for App.xaml

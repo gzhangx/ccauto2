@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Documents;
 using System.Windows.Markup;
 
-namespace WPFCaptureSample
+namespace ccAuto2
 {
     public class ImageStore
     {

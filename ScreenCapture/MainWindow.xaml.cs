@@ -39,7 +39,7 @@ using Windows.Graphics.DirectX.Direct3D11;
 
 
 
-namespace WPFCaptureSample
+namespace ccAuto2
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace WPFCaptureSample
+namespace ccAuto2
 {
     internal class EventRequester
     {

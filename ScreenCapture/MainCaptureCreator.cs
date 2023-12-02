@@ -13,7 +13,7 @@ using Windows.Graphics.DirectX.Direct3D11;
 using Windows.Graphics.Imaging;
 using Windows.UI.Composition;
 
-namespace WPFCaptureSample
+namespace ccAuto2
 {
     public class MainCaptureCreator
     {

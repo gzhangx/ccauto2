@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using static System.Runtime.CompilerServices.RuntimeHelpers;
 
-namespace WPFCaptureSample
+namespace ccAuto2
 {
     public static class Win32Helper
     {
