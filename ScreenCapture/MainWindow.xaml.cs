@@ -56,6 +56,7 @@ namespace ccAuto2
 
         private Window imgWin = new Window();
         private EventRequester eventRequester = new EventRequester();
+        EventRequester.RequestAndResult gameResult, samResult;
         public MainWindow()
         {
             InitializeComponent();
@@ -71,6 +72,8 @@ namespace ccAuto2
             imgWin.Width= 20;
             imgWin.Height= 20;
             imgWin.Show();
+            gameResult = eventRequester.registerNewEvent("gameResult");
+            samResult = eventRequester.registerNewEvent("samResult");
             //imgWin.Hide();
         }
 
@@ -170,7 +173,7 @@ namespace ccAuto2
         {
             btnCaptureAndSeg.IsEnabled = false;
             //ConvertToBitmap(sample.Visual);
-            eventRequester.doRequest(EventRequester.RequestTypes.SamOneImage, tbf =>
+            samResult.doRequest(tbf =>
             {
                 var tmStr = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
                 var fileName = "d:\\segan\\out\\test\\test" + tmStr + ".png";
@@ -273,11 +276,11 @@ namespace ccAuto2
             {
                 System.Threading.Thread.Sleep(5000);
 
-                eventRequester.doRequest(EventRequester.RequestTypes.GameProcessing, tb => { });
+                gameResult.doRequest(tb => { });
 
                 while(!_needToDie)
                 {
-                    var buf = eventRequester.waitFor(EventRequester.RequestTypes.GameProcessing, 2000);
+                    var buf = gameResult.waitFor(2000);
                     if (buf != null)
                     {
                         processBuffer(buf);

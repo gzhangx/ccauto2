@@ -15,55 +15,54 @@ namespace ccAuto2
             GameProcessing = 1,
         }
         private readonly object syncObj = new object();
-
-        private readonly AutoResetEvent[] monitors = new AutoResetEvent[]
-        {
-            new AutoResetEvent(false),
-            new AutoResetEvent(false),
-        };
+        
 
         public class RequestAndResult
         {
-            public RequestTypes RequestTypes;
-            public bool inProgress;
+            public string name;
+            public bool pendingRequest;
+            public bool inProgress { get; internal set; }
             public byte[] result;
-            public AutoResetEvent waitObj;
+            public AutoResetEvent waitObj = new AutoResetEvent(false);
             public Action<byte[]> callback;
-        }
-        RequestAndResult[] reqestResults = new RequestAndResult[2];
 
-        public bool doRequest(RequestTypes req, Action<byte[]> cb)
-        {
-            lock (syncObj)
+            public bool doRequest(Action<byte[]> callback)
             {
-                if (reqestResults[(int)req] != null) return false;                
-                reqestResults[(int)req] = new RequestAndResult
-                {
-                    RequestTypes = req,
-                    inProgress = false,
-                    waitObj= monitors[(int)req],
-                    result = null,
-                    callback= cb,
-                };
+                if (inProgress) return false;
+                pendingRequest= true;
+                this.callback = callback;
+                this.result= null;
                 return true;
             }
+            public byte[] waitFor(int timeout = 1000)
+            {
+                if (waitObj.WaitOne(timeout) && result != null)
+                {
+                    return result;
+                }
+                return null;
+            }
+        }
+        private List<RequestAndResult> reqestResults = new List<RequestAndResult>();
+
+        public RequestAndResult registerNewEvent(string name)
+        {
+            lock (syncObj)
+            {                
+                var req = new RequestAndResult
+                {
+                    name = name,
+                    pendingRequest = false,
+                    inProgress = false,
+                    result = null,
+                    callback = null,
+                };
+                reqestResults.Add(req);
+                return req;
+            }
         }
 
-        public byte[] waitFor(RequestTypes req, int timeout = 1000)
-        {
-            RequestAndResult res = null;
-            lock (syncObj)
-            {
-                res = reqestResults[(int)req];
-                if (res == null) return null;
-            }
-            if (res.waitObj.WaitOne(timeout) && res.result != null)
-            {
-                reqestResults[(int)req] = null;
-                return res.result;
-            }
-            return null;
-        }
+        
 
         public bool canProcessRequest()
         {
@@ -71,7 +70,7 @@ namespace ccAuto2
             {
                 foreach (var req in reqestResults)
                 {
-                    if (req != null && req.result == null && !req.inProgress)
+                    if (req.pendingRequest && !req.inProgress)
                     {
                         req.inProgress = true;
                         return true;
@@ -86,8 +85,10 @@ namespace ccAuto2
             {
                 foreach (var res in reqestResults)
                 {
-                    if (res != null)
+                    if (res.pendingRequest)
                     {
+                        res.inProgress = false;
+                        res.inProgress = false;
                         res.result = buf;
                         res.waitObj.Set();
                         if (res.callback != null) res.callback(buf);
