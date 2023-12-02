@@ -55,6 +55,7 @@ namespace WPFCaptureSample
         private Thread _thread;
 
         private Window imgWin = new Window();
+        private EventRequester eventRequester = new EventRequester();
         public MainWindow()
         {
             InitializeComponent();
@@ -164,56 +165,32 @@ namespace WPFCaptureSample
         }
 
 
-        
-
-                
-
-
-        
-
-        bool captureOne = false;
+       
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             btnCaptureAndSeg.IsEnabled = false;
             //ConvertToBitmap(sample.Visual);
-            captureOne = true;
-        }
-
-        bool autoItCaptureOne = false;
-        bool autoItCaptureInFlight = false;
-        byte[] autoItCapturedData = null;
-        static readonly object syncObj = new object();
-        async void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
-        {
-            byte[] autoItBuf = null;
-            if (autoItCaptureOne)
+            eventRequester.doRequest(EventRequester.RequestTypes.SamOneImage, tbf =>
             {
-                autoItCaptureOne = false;
-                autoItCaptureInFlight = true;
-                autoItBuf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface).ConfigureAwait(false);
-            }
-            lock (syncObj)
-            {
-                if (autoItBuf!= null)
-                {
-                    autoItCaptureInFlight = false;
-                    autoItCapturedData = autoItBuf;
-                }   
-            }
-            if (captureOne)
-            {
-                captureOne = false;
-                var tbf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface);
                 var tmStr = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
                 var fileName = "d:\\segan\\out\\test\\test" + tmStr + ".png";
                 File.WriteAllBytes(fileName, tbf);
                 var command = "d:\\segan\\testwithfile.bat " + fileName;
                 ExecuteCmd(command);
                 Console.WriteLine("cmd.exe /c " + command);
-                await Dispatcher.BeginInvoke(new Action(() =>
+                Dispatcher.BeginInvoke(new Action(() =>
                 {
                     btnCaptureAndSeg.IsEnabled = true;
                 }));
+            });
+        }
+        
+        async void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
+        {            
+            if (eventRequester.canProcessRequest())
+            {                
+                var buf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface).ConfigureAwait(false);
+                eventRequester.processRequest(buf);
             }
         }
 
@@ -295,14 +272,19 @@ namespace WPFCaptureSample
             while(!_needToDie)
             {
                 System.Threading.Thread.Sleep(5000);
-                if (autoItCaptureInFlight) return;
-                if (autoItCaptureOne) return;
 
-                if (autoItCapturedData != null)
+                eventRequester.doRequest(EventRequester.RequestTypes.GameProcessing, tb => { });
+
+                while(!_needToDie)
                 {
-                    processBuffer(autoItCapturedData);
-                }
-                autoItCaptureOne = true;
+                    var buf = eventRequester.waitFor(EventRequester.RequestTypes.GameProcessing, 2000);
+                    if (buf != null)
+                    {
+                        processBuffer(buf);
+                        break;
+                    }
+                    System.Threading.Thread.Sleep(5000);
+                }                
             }
         }
 

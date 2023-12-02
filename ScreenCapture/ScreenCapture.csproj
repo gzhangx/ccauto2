@@ -60,6 +60,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="EventRequester.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="MainCaptureCreator.cs" />
     <Compile Include="Win32Helper.cs" />
