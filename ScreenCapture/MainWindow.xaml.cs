@@ -306,6 +306,25 @@ namespace WPFCaptureSample
             }
         }
 
+        private void ActionMouseMoveToStore(ImageStore store, int xOff, int yOff)
+        {
+            Win32Helper.Rect rect = new Win32Helper.Rect();
+            Win32Helper.GetWindowRect(gameWin, ref rect);
+            Win32Helper.SetCursorPos(rect.Left, rect.Top);
+            System.Threading.Thread.Sleep(200);
+            Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
+            Win32Helper.SetCursorPos(rect.Left + (int)((store.rect.Left + xOff) * dpiX), rect.Top + (int)((store.rect.Top + yOff) * dpiY));
+            System.Threading.Thread.Sleep(200);
+            //Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
+            //Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
+            //Win32Helper.SendMouseClick();
+        }
+        private void ActionMoveToStoreAndClick(ImageStore store, int xOff, int yOff)
+        {
+            ActionMouseMoveToStore(store, xOff, yOff);
+            Win32Helper.SendMouseClick();
+        }
+        int debugPos = 0;
         private void processBuffer(byte[] buf)
         {
             if (_needToDie) return;
@@ -324,7 +343,9 @@ namespace WPFCaptureSample
                 }
             });
 
+            Console.WriteLine("got buffer " + (debugPos++));
             var src = ImageLoader.bufToMat(buf);
+            Console.WriteLine("got buffer and converted to image");
             foreach (var store in imageStore.stores)
             {
                 var diff = ImageLoader.CompareToMat(src, store);
@@ -343,7 +364,11 @@ namespace WPFCaptureSample
                         System.Threading.Thread.Sleep(200);
                         Console.WriteLine("moving to "+rect.Right +","+ rect.Bottom);
                         Win32Helper.SetCursorPos(rect.Right , rect.Bottom);
-
+                        Win32Helper.SendMouseClick();
+                    } 
+                    if (store.name.Equals("BuilderBase_ReturnHome"))
+                    {
+                        ActionMoveToStoreAndClick(store, 20, 20);
                     }
                 }
             }

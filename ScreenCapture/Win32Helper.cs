@@ -164,5 +164,44 @@ namespace WPFCaptureSample
             SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(Input)));
         }
 
+
+        public static void SendMouseClick()
+        {
+            Input[] inputs = new Input[]
+            {
+                new Input
+                {
+                    type = (int)InputType.Mouse,
+                    u = new InputUnion
+                    {
+                        mi = new MouseInput
+                        {
+                            dx = 0,
+                            dy = 0,
+                            dwFlags = (uint)MouseEventF.LeftDown,
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo(),
+                        }
+                    },
+                },
+                new Input
+                {
+                    type = (int)InputType.Mouse,
+                    u = new InputUnion
+                    {
+                        mi = new MouseInput
+                        {
+                            dx = 0,
+                            dy = 0,
+                            dwFlags = (uint)MouseEventF.LeftUp,
+                            time = 0,
+                            dwExtraInfo = GetMessageExtraInfo(),
+                        }
+                    },
+                }
+            };
+
+            SendInput((uint)inputs.Length, inputs, Marshal.SizeOf(typeof(Input)));
+        }
     }
 }
