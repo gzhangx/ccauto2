@@ -28,10 +28,21 @@ namespace ccAuto2
         private ImageLoader imageStore = new ImageLoader();
         private Action<byte[]> showImage;
 
-        int CAPTUREW = 982;
-        int CAPTUREH = 567;
+        //int CAPTUREW = 982;
+        //int CAPTUREH = 567;  //1920/1080 240 dpi default
 
-        float dpiX = 1.5f, dpiY = 1.5f;
+        //float dpiX = 1.5f, dpiY = 1.5f;
+
+        class CurWinInfo
+        {
+            public int x;
+            public int y;
+            public int width;
+            public int height;
+            public double DPIX;
+            public double DPIY;
+        }
+        CurWinInfo curWinInfo = new CurWinInfo();
         //returns OK if fine, else error
         public string InitWindowListAndStart()
         {
@@ -103,7 +114,7 @@ namespace ccAuto2
             Win32Helper.SetCursorPos(rect.Left, rect.Top);
             System.Threading.Thread.Sleep(200);
             Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
-            Win32Helper.SetCursorPos(rect.Left + (int)((store.rect.Left + xOff) * dpiX), rect.Top + (int)((store.rect.Top + yOff) * dpiY));
+            Win32Helper.SetCursorPos(TranslatePointXToScreen(store.rect.Left + xOff), TranslatePointYToScreen(store.rect.Top+yOff));
             System.Threading.Thread.Sleep(200);
             //Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
             //Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
@@ -114,6 +125,15 @@ namespace ccAuto2
             ActionMouseMoveToStore(store, xOff, yOff);
             Win32Helper.SendMouseClick();
         }
+
+        int TranslatePointXToScreen(int x)
+        {
+            return curWinInfo.x + (int)(x * curWinInfo.DPIX);
+        }
+        int TranslatePointYToScreen(int y)
+        {
+            return curWinInfo.y + (int)(y * curWinInfo.DPIY);
+        }
         int debugPos = 0;
         private void processBuffer(byte[] buf)
         {            
@@ -123,6 +143,14 @@ namespace ccAuto2
             Console.WriteLine("got buffer " + (debugPos++));
             var src = ImageLoader.bufToMat(buf);
             Console.WriteLine("got buffer and converted to image");
+            Win32Helper.Rect rect = new Win32Helper.Rect();
+            Win32Helper.GetWindowRect(gameWin, ref rect);
+            curWinInfo.x = rect.Left;
+            curWinInfo.y= rect.Top;
+            curWinInfo.width = rect.Right - rect.Left;
+            curWinInfo.height = rect.Bottom - rect.Top;
+            curWinInfo.DPIX = curWinInfo.width* 1.0 / src.Width;
+            curWinInfo.DPIY = curWinInfo.height* 1.0 / src.Height;
             foreach (var store in imageStore.stores)
             {
                 var diff = ImageLoader.CompareToMat(src, store);
@@ -131,13 +159,14 @@ namespace ccAuto2
                 {
                     Console.WriteLine("for " + store.name + " diff=" + diff);
                     if (store.name.Equals("AnyoneThereReload"))
-                    {
-                        Win32Helper.Rect rect = new Win32Helper.Rect();
-                        Win32Helper.GetWindowRect(gameWin, ref rect);
+                    {                        
                         Win32Helper.SetCursorPos(rect.Left, rect.Top);
                         System.Threading.Thread.Sleep(200);
                         Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
-                        Win32Helper.SetCursorPos(rect.Left + (int)((store.rect.Left + 50) * dpiX), rect.Top + (int)((store.rect.Top + 100) * dpiY));
+                        int x = TranslatePointXToScreen(store.rect.Left + 50);
+                        int y = TranslatePointYToScreen(store.rect.Top + 100);
+                        int dbg = (int)((store.rect.Left + 50) * curWinInfo.DPIX);
+                        Win32Helper.SetCursorPos(x, y);
                         System.Threading.Thread.Sleep(200);
                         Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
                         Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
