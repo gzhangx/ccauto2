@@ -28,6 +28,8 @@ namespace ccAuto2
         private ImageLoader imageStore = new ImageLoader();
         private Action<byte[]> showImage;
 
+        int CAPTUREW = 982;
+        int CAPTUREH = 567;
 
         float dpiX = 1.5f, dpiY = 1.5f;
         //returns OK if fine, else error
@@ -46,6 +48,10 @@ namespace ccAuto2
                 {
                     creator.StopCapture();
                     var hwnd = processesWithWindows.First().MainWindowHandle;
+                    Win32Helper.Rect rect = new Win32Helper.Rect();
+                    Win32Helper.GetWindowRect(hwnd, ref rect);
+                    //Win32Helper.SetWindowPos(hwnd, 0, rect.Left, rect.Top, CAPTUREW, CAPTUREH, 0);
+
                     gameWin = hwnd;
                     try
                     {
@@ -137,10 +143,22 @@ namespace ccAuto2
                         Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
                         Win32Helper.SendMouseClick();
                     }
-                    if (store.name.Equals("BuilderBase_ReturnHome"))
+
+                    string[] autoClickNames = new string[]
                     {
-                        ActionMoveToStoreAndClick(store, 20, 20);
-                    }
+                        "BuilderBase_ReturnHome",
+                        "BuilderBaseAttack",
+                        "BuilderBaseBattleFindNow",
+                        "BuilderBase_Battle_BattleMachine",
+                    };
+                    foreach (string name in autoClickNames)
+                    {
+                        if (store.name.Equals(name))
+                        {
+                            Console.WriteLine("Doing auto action for " + name);
+                            ActionMoveToStoreAndClick(store, 20, 20);
+                        }
+                    }                    
                 }
             }
         }

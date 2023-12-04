@@ -51,6 +51,8 @@ namespace ccAuto2
 
         public static double CompareToMat(Mat src, ImageStore stored)
         {
+            if (stored.rect.Location.X > src.Size.Width) return 0;
+            if (stored.rect.Location.Y > src.Size.Height) return 0;
             var cropSrc = new Mat(src, stored.rect);
             var output = new Mat();
             CvInvoke.Compare(cropSrc, stored.image, output, Emgu.CV.CvEnum.CmpType.Equal);

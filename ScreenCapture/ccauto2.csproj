@@ -128,12 +128,27 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="images\AnyoneThereReload%28296,259,430,122%29_crop.png">
+    <None Include="images\BuilderBase_ReturnHome%28445,492,133,53%29.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <None Include="images\BuilderBase_ReturnHome%28445,492,133,53%29.png">
+    <None Include="images\BuilderBaseAttack%2814,456,97,94%29_crop.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="images\BuilderBaseBattleFindNow%28611,351,186,65%29_crop.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="images\BuilderBase_Battle_BattleMachine%2864,472,65,86%29_crop.png">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="images\AnyoneThereReload%28274,241,401,116%29_crop.png">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
