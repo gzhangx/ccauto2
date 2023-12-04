@@ -91,7 +91,7 @@ namespace ccAuto2
         {
             while (!_needToDie)
             {
-                System.Threading.Thread.Sleep(5000);
+                System.Threading.Thread.Sleep(8000);
 
                 gameResult.doRequest(tb => { });
 
@@ -114,11 +114,10 @@ namespace ccAuto2
             Console.WriteLine("going to set cursor pos" + rect.Left + "," + rect.Top);
             System.Threading.Thread.Sleep(1000);
             Win32Helper.SetCursorPos(rect.Left, rect.Top);
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(1000);
             Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
             Win32Helper.SetCursorPos(TranslatePointXToScreen(store.rect.Left + xOff), TranslatePointYToScreen(store.rect.Top+yOff));
-            System.Threading.Thread.Sleep(2000);
-            System.Threading.Thread.Sleep(200);
+            System.Threading.Thread.Sleep(1000);
             //Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
             //Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
             //Win32Helper.SendMouseClick();
@@ -203,8 +202,9 @@ namespace ccAuto2
                 else
                 {
                     Console.WriteLine(" " + store.name + " diff=" + diff.ToString("0.00"));
-                }
+                }                
             }
+            Win32Helper.SetCursorPos(rect.Left, rect.Top);
         }
 
         protected virtual void Dispose(bool disposing)
