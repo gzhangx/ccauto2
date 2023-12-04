@@ -23,6 +23,7 @@
 //  ---------------------------------------------------------------------------------
 
 using CaptureSampleCore;
+using ccauto;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -45,14 +46,8 @@ namespace ccAuto2
     /// Interaction logic for MainWindow.xaml
     /// </summary>
     public partial class MainWindow : Window
-    {
-        const string BSAP_WindowName = "BlueStacks App Player";
-        private ObservableCollection<Process> processes;
-
-        private MainCaptureCreator creator = new MainCaptureCreator();
-        private ImageLoader imageStore = new ImageLoader();
-        private bool _needToDie = false;
-        private Thread _thread;
+    {       
+        private CocCapture cocCapture = new CocCapture();        
 
         private Window imgWin = new Window();
         EventRequester.RequestAndResult gameResult, samResult;
@@ -63,25 +58,40 @@ namespace ccAuto2
 #if DEBUG
             // Force graphicscapture.dll to load.
             var picker = new GraphicsCapturePicker();
-#endif
-            imageStore.LoadAll();
-            _thread = new Thread(actionthread);
-            _thread.Start();
+#endif            
 
             imgWin.Width= 20;
             imgWin.Height= 20;
             imgWin.Show();
-            gameResult = creator.registerNewEvent("gameResult");
-            samResult = creator.registerNewEvent("samResult");
+            gameResult = cocCapture.creator.registerNewEvent("gameResult");
+            samResult = cocCapture.creator.registerNewEvent("samResult");
             //imgWin.Hide();
+
+            cocCapture.Init(gameResult, buf =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    if (cocCapture._needToDie) return;
+                    using (MemoryStream memory = new MemoryStream(buf))
+                    {
+                        memory.Position = 0;
+                        BitmapImage bitmapimage = new BitmapImage();
+                        bitmapimage.BeginInit();
+                        bitmapimage.StreamSource = memory;
+                        bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmapimage.EndInit();
+                        canvImg.Source = bitmapimage;
+                    }
+                });
+            });
         }
 
 
         private async void PickerButton_Click(object sender, RoutedEventArgs e)
         {
-            creator.StopCapture();
+            cocCapture.creator.StopCapture();
             WindowComboBox.SelectedIndex = -1;
-            await creator.StartPickerCaptureAsync(this);
+            await cocCapture.creator.StartPickerCaptureAsync(this);
         }
 
         double dpiX = 1.0;
@@ -99,7 +109,7 @@ namespace ccAuto2
             }
             var controlsWidth = (float)(ControlsGrid.ActualWidth * dpiX);
             controlsWidth = 0;
-            creator.init(imgWin, controlsWidth);
+            cocCapture.creator.init(imgWin, controlsWidth);
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
             InitWindowListAndStart();
@@ -110,7 +120,7 @@ namespace ccAuto2
             var curText = StopButton.Content as string;
             if (String.Equals(curText, "Stop Capture"))
             {
-                creator.StopCapture();
+                cocCapture.creator.StopCapture();
                 WindowComboBox.SelectedIndex = -1;
                 StopButton.Content = "Start Capture";                
             }
@@ -131,39 +141,16 @@ namespace ccAuto2
             }
         }
 
-        private IntPtr gameWin = IntPtr.Zero;
+        
         private void InitWindowListAndStart()
         {
-            if (ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
+            var error = cocCapture.InitWindowListAndStart();
+            if ("OK".Equals(error))
             {
-                var pp = Process.GetProcesses();
-                var processesWithWindows = from p in Process.GetProcesses()
-                                           where !string.IsNullOrWhiteSpace(p.MainWindowTitle) && WindowEnumerationHelper.IsWindowValidForCapture(p.MainWindowHandle)
-                                           && string.Equals(p.MainWindowTitle, BSAP_WindowName)
-                                           select p;
-                processes = new ObservableCollection<Process>(processesWithWindows);
-                WindowComboBox.ItemsSource = processes;
-                if (processes.Count == 1)
-                {
-                    WindowComboBox.SelectedIndex = 0;
-                    creator.StopCapture();
-                    var hwnd = processesWithWindows.First().MainWindowHandle;
-                    gameWin = hwnd;
-                    try
-                    {
-                        creator.StartHwndCapture(hwnd);
-                        StopButton.Content = "Stop Capture";
-                    }
-                    catch (Exception)
-                    {
-                        Debug.WriteLine($"Hwnd 0x{hwnd.ToInt32():X8} is not valid for capture!");                        
-                    }
-                } 
+                return;
             }
-            else
-            {
-                WindowComboBox.IsEnabled = false;
-            }
+            MessageBox.Show(error);
+            
         }
 
 
@@ -171,39 +158,16 @@ namespace ccAuto2
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             btnCaptureAndSeg.IsEnabled = false;
-            //ConvertToBitmap(sample.Visual);
-            samResult.doRequest(tbf =>
+            DoSam.ExecuteSamProcess(samResult, () =>
             {
-                var tmStr = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
-                var fileName = "d:\\segan\\out\\test\\test" + tmStr + ".png";
-                File.WriteAllBytes(fileName, tbf);
-                var command = "d:\\segan\\testwithfile.bat " + fileName;
-                ExecuteCmd(command);
-                Console.WriteLine("cmd.exe /c " + command);
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
                     btnCaptureAndSeg.IsEnabled = true;
                 }));
             });
+            //ConvertToBitmap(sample.Visual);            
         }
-       
-
-        void ExecuteCmd(string command)
-        {
-            int ExitCode;
-            ProcessStartInfo ProcessInfo;
-            Process Process;
-
-            ProcessInfo = new ProcessStartInfo("cmd.exe", "/c " + command);
-            ProcessInfo.CreateNoWindow = false;
-            ProcessInfo.UseShellExecute = true;
-
-            Process = Process.Start(ProcessInfo);
-            Process.WaitForExit();
-
-            ExitCode = Process.ExitCode;
-            //Process.Close();
-        }
+      
 
         bool checkMouse = false;
         private void btnTest_Click(object sender, RoutedEventArgs e)
@@ -212,7 +176,7 @@ namespace ccAuto2
             //Task.Run(() =>
             {
                 
-                var wnd = Win32Helper.FindWindow(null, BSAP_WindowName);
+                var wnd = Win32Helper.FindWindow(null, CocCapture.BSAP_WindowName);
                 Win32Helper.SetForegroundWindow(wnd);
                 System.Threading.Thread.Sleep(1000);
                 //System.Windows.Forms.SendKeys.SendWait("DDD");
@@ -261,99 +225,11 @@ namespace ccAuto2
         }
 
 
-        private void actionthread()
-        {
-            while(!_needToDie)
-            {
-                System.Threading.Thread.Sleep(5000);
-
-                gameResult.doRequest(tb => { });
-
-                while(!_needToDie)
-                {
-                    var buf = gameResult.waitFor(2000);
-                    if (buf != null)
-                    {
-                        processBuffer(buf);
-                        break;
-                    }
-                    System.Threading.Thread.Sleep(5000);
-                }                
-            }
-        }
-
-        private void ActionMouseMoveToStore(ImageStore store, int xOff, int yOff)
-        {
-            Win32Helper.Rect rect = new Win32Helper.Rect();
-            Win32Helper.GetWindowRect(gameWin, ref rect);
-            Win32Helper.SetCursorPos(rect.Left, rect.Top);
-            System.Threading.Thread.Sleep(200);
-            Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
-            Win32Helper.SetCursorPos(rect.Left + (int)((store.rect.Left + xOff) * dpiX), rect.Top + (int)((store.rect.Top + yOff) * dpiY));
-            System.Threading.Thread.Sleep(200);
-            //Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
-            //Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
-            //Win32Helper.SendMouseClick();
-        }
-        private void ActionMoveToStoreAndClick(ImageStore store, int xOff, int yOff)
-        {
-            ActionMouseMoveToStore(store, xOff, yOff);
-            Win32Helper.SendMouseClick();
-        }
-        int debugPos = 0;
-        private void processBuffer(byte[] buf)
-        {
-            if (_needToDie) return;
-            Dispatcher.Invoke(() =>
-            {
-                if (_needToDie) return;
-                using (MemoryStream memory = new MemoryStream(buf))
-                {
-                    memory.Position = 0;
-                    BitmapImage bitmapimage = new BitmapImage();
-                    bitmapimage.BeginInit();
-                    bitmapimage.StreamSource = memory;
-                    bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapimage.EndInit();
-                    canvImg.Source = bitmapimage;
-                }
-            });
-
-            Console.WriteLine("got buffer " + (debugPos++));
-            var src = ImageLoader.bufToMat(buf);
-            Console.WriteLine("got buffer and converted to image");
-            foreach (var store in imageStore.stores)
-            {
-                var diff = ImageLoader.CompareToMat(src, store);
-                
-                if (diff > 0.9)
-                {
-                    Console.WriteLine("for " + store.name + " diff=" + diff);
-                    if (store.name.Equals("AnyoneThereReload"))
-                    {
-                        Win32Helper.Rect rect = new Win32Helper.Rect();
-                        Win32Helper.GetWindowRect(gameWin, ref rect);
-                        Win32Helper.SetCursorPos(rect.Left, rect.Top);
-                        System.Threading.Thread.Sleep(200);
-                        Console.WriteLine(rect.Left+","+rect.Top+" adding "+store.rect.Left+","+store.rect.Top);
-                        Win32Helper.SetCursorPos(rect.Left + (int)((store.rect.Left + 50)*dpiX), rect.Top+ (int)((store.rect.Top+100)*dpiY));
-                        System.Threading.Thread.Sleep(200);
-                        Console.WriteLine("moving to "+rect.Right +","+ rect.Bottom);
-                        Win32Helper.SetCursorPos(rect.Right , rect.Bottom);
-                        Win32Helper.SendMouseClick();
-                    } 
-                    if (store.name.Equals("BuilderBase_ReturnHome"))
-                    {
-                        ActionMoveToStoreAndClick(store, 20, 20);
-                    }
-                }
-            }
-        }
+       
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            _needToDie = true;
-            _thread.Join();
+            cocCapture.Dispose();
             imgWin.Close();
         }
     }

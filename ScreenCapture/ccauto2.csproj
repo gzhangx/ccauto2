@@ -60,6 +60,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CocCapture.cs" />
+    <Compile Include="DoSam.cs" />
     <Compile Include="EventRequester.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="MainCaptureCreator.cs" />

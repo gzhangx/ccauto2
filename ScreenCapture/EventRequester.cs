@@ -88,7 +88,7 @@ namespace ccAuto2
                     if (res.pendingRequest)
                     {
                         res.inProgress = false;
-                        res.inProgress = false;
+                        res.pendingRequest = false;
                         res.result = buf;
                         res.waitObj.Set();
                         if (res.callback != null) res.callback(buf);

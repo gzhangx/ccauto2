@@ -98,5 +98,10 @@ namespace CaptureSampleCore
             capture?.Dispose();
             brush.Surface = null;
         }
+
+        public bool isStarted()
+        {
+            return brush.Surface != null;
+        }
     }
 }
