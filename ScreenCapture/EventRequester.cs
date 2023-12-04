@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ccAuto2
 {
-    internal class EventRequester
+    public class EventRequester
     {
         public enum RequestTypes
         {

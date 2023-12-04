@@ -44,7 +44,7 @@ namespace ccAuto2
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, BasicCapture.AskCopy
+    public partial class MainWindow : Window
     {
         const string BSAP_WindowName = "BlueStacks App Player";
         private ObservableCollection<Process> processes;
@@ -55,7 +55,6 @@ namespace ccAuto2
         private Thread _thread;
 
         private Window imgWin = new Window();
-        private EventRequester eventRequester = new EventRequester();
         EventRequester.RequestAndResult gameResult, samResult;
         public MainWindow()
         {
@@ -72,8 +71,8 @@ namespace ccAuto2
             imgWin.Width= 20;
             imgWin.Height= 20;
             imgWin.Show();
-            gameResult = eventRequester.registerNewEvent("gameResult");
-            samResult = eventRequester.registerNewEvent("samResult");
+            gameResult = creator.registerNewEvent("gameResult");
+            samResult = creator.registerNewEvent("samResult");
             //imgWin.Hide();
         }
 
@@ -100,7 +99,7 @@ namespace ccAuto2
             }
             var controlsWidth = (float)(ControlsGrid.ActualWidth * dpiX);
             controlsWidth = 0;
-            creator.init(imgWin, controlsWidth, this);
+            creator.init(imgWin, controlsWidth);
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
             InitWindowListAndStart();
@@ -187,15 +186,7 @@ namespace ccAuto2
                 }));
             });
         }
-        
-        async void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
-        {            
-            if (eventRequester.canProcessRequest())
-            {                
-                var buf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface).ConfigureAwait(false);
-                eventRequester.processRequest(buf);
-            }
-        }
+       
 
         void ExecuteCmd(string command)
         {

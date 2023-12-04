@@ -15,7 +15,7 @@ using Windows.UI.Composition;
 
 namespace ccAuto2
 {
-    public class MainCaptureCreator
+    public class MainCaptureCreator: BasicCapture.AskCopy
     {
         private Compositor compositor;
         private CompositionTarget target;
@@ -23,14 +23,11 @@ namespace ccAuto2
 
         private BasicSampleApplication sample;
 
-        BasicCapture.AskCopy ask;
-
-
-        public void init(Window window, float offset, BasicCapture.AskCopy ask)
+        private EventRequester eventRequester = new EventRequester();
+        public void init(Window window, float offset)
         {
             var interopWindow = new WindowInteropHelper(window);
             InitComposition(interopWindow.Handle, offset);
-            this.ask = ask;
         }
         private void InitComposition(IntPtr mainHwnd, float offset)
         {
@@ -58,6 +55,12 @@ namespace ccAuto2
             sample.StopCapture();
         }
 
+
+        public EventRequester.RequestAndResult registerNewEvent(string name)
+        {
+            return eventRequester.registerNewEvent(name);
+        }
+
         public async Task StartPickerCaptureAsync(Window window)
         {
             var interopWindow = new WindowInteropHelper(window);
@@ -68,7 +71,7 @@ namespace ccAuto2
 
             if (item != null)
             {
-                sample.StartCaptureFromItem(item, ask);
+                sample.StartCaptureFromItem(item, this);
             }
         }
 
@@ -77,12 +80,12 @@ namespace ccAuto2
             GraphicsCaptureItem item = CaptureHelper.CreateItemForWindow(hwnd);
             if (item != null)
             {
-                sample.StartCaptureFromItem(item, ask);
+                sample.StartCaptureFromItem(item, this);
             }
         }
 
         //matchTemplate, minMaxLoc
-        public static async Task<byte[]> ConvertSurfaceToPngCall(IDirect3DSurface surface)
+        static async Task<byte[]> ConvertSurfaceToPngCall(IDirect3DSurface surface)
         {
             using (var t = await SoftwareBitmap.CreateCopyFromSurfaceAsync(surface).AsTask().ConfigureAwait(false))
             {
@@ -96,7 +99,15 @@ namespace ccAuto2
                 }
             }
             
+        }        
+
+        async void BasicCapture.AskCopy.doSurface(IDirect3DSurface surface)
+        {
+            if (eventRequester.canProcessRequest())
+            {
+                var buf = await MainCaptureCreator.ConvertSurfaceToPngCall(surface).ConfigureAwait(false);
+                eventRequester.processRequest(buf);
+            }
         }
-        
     }
 }
