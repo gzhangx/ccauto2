@@ -111,10 +111,13 @@ namespace ccAuto2
         {
             Win32Helper.Rect rect = new Win32Helper.Rect();
             Win32Helper.GetWindowRect(gameWin, ref rect);
+            Console.WriteLine("going to set cursor pos" + rect.Left + "," + rect.Top);
+            System.Threading.Thread.Sleep(1000);
             Win32Helper.SetCursorPos(rect.Left, rect.Top);
-            System.Threading.Thread.Sleep(200);
+            System.Threading.Thread.Sleep(2000);
             Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
             Win32Helper.SetCursorPos(TranslatePointXToScreen(store.rect.Left + xOff), TranslatePointYToScreen(store.rect.Top+yOff));
+            System.Threading.Thread.Sleep(2000);
             System.Threading.Thread.Sleep(200);
             //Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
             //Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
@@ -155,39 +158,51 @@ namespace ccAuto2
             {
                 var diff = ImageLoader.CompareToMat(src, store);
 
-                if (diff > 0.9)
+                if (diff > 0.5)
                 {
-                    Console.WriteLine("for " + store.name + " diff=" + diff);
-                    if (store.name.Equals("AnyoneThereReload"))
-                    {                        
-                        Win32Helper.SetCursorPos(rect.Left, rect.Top);
-                        System.Threading.Thread.Sleep(200);
-                        Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
-                        int x = TranslatePointXToScreen(store.rect.Left + 50);
-                        int y = TranslatePointYToScreen(store.rect.Top + 100);
-                        int dbg = (int)((store.rect.Left + 50) * curWinInfo.DPIX);
-                        Win32Helper.SetCursorPos(x, y);
-                        System.Threading.Thread.Sleep(200);
-                        Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
-                        Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
-                        Win32Helper.SendMouseClick();
-                    }
-
+                    Console.WriteLine("for " + store.name + " diff=" + diff.ToString("0.00"));
                     string[] autoClickNames = new string[]
                     {
+                        "AnyoneThereReload",
                         "BuilderBase_ReturnHome",
+                        "BuilderBase_ReturnHome_2",
                         "BuilderBaseAttack",
+                        "BuilderBaseAttack_1",
                         "BuilderBaseBattleFindNow",
                         "BuilderBase_Battle_BattleMachine",
+                        "BuilderBaseBattleSurrender",
+                        "BuilderBaseBattleSurrenderOK",
                     };
                     foreach (string name in autoClickNames)
                     {
                         if (store.name.Equals(name))
                         {
+                            int offsetX = 20;
+                            int offsetY = 20;
+                            if (store.name.Equals("AnyoneThereReload"))
+                            {
+                                offsetX = 50;
+                                offsetY = 100;
+                            } else if (name.Equals("BuilderBaseBattleSurrenderOK"))
+                            {
+                                offsetX = 333;
+                                offsetY = 216;
+                            }
                             Console.WriteLine("Doing auto action for " + name);
-                            ActionMoveToStoreAndClick(store, 20, 20);
+                            ActionMoveToStoreAndClick(store, offsetX, offsetY);
+
+                            if (name.Equals("BuilderBase_Battle_BattleMachine"))
+                            {
+                                Console.WriteLine("clicked battlemachine, click above");
+                                Thread.Sleep(1000);
+                                ActionMoveToStoreAndClick(store, offsetX, -100);
+                            }
                         }
-                    }                    
+                    }
+                }
+                else
+                {
+                    Console.WriteLine(" " + store.name + " diff=" + diff.ToString("0.00"));
                 }
             }
         }

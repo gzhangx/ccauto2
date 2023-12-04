@@ -33,7 +33,7 @@ namespace ccAuto2
             foreach (var file in files)
             {
                 var img = Emgu.CV.CvInvoke.Imread(file);
-                var matches = new Regex("([A-Za-z_]+)\\((\\d+,\\d+,\\d+,\\d+)\\)").Match(file);
+                var matches = new Regex("([A-Za-z0-9_]+)\\((\\d+,\\d+,\\d+,\\d+)\\)").Match(file);
                 var name = matches.Groups[1].Value;
                 var posStr = matches.Groups[2].Value;
                 var poss = posStr.Split(',');
