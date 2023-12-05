@@ -167,6 +167,7 @@ namespace ccAuto2
                         "BuilderBase_ReturnHome_2",
                         "BuilderBaseAttack",
                         "BuilderBaseAttack_1",
+                        "BuilderBaseAttack_4_8",
                         "BuilderBaseBattleFindNow",
                         "BuilderBase_Battle_BattleMachine",
                         "BuilderBaseBattleSurrender",
