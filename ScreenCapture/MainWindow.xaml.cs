@@ -51,6 +51,7 @@ namespace ccAuto2
 
         private Window imgWin = new Window();
         EventRequester.RequestAndResult gameResult, samResult;
+        EasyRect curSelRect = null;
         public MainWindow()
         {
             InitializeComponent();
@@ -115,8 +116,11 @@ namespace ccAuto2
             {
                 Point p = mouseE.GetPosition(canvImg);
                 mouseDownP = p;
+                mouseUpP.X = -1;
                 canvImg.CaptureMouse();
                 mouseE.Handled = true;
+                mouseDspRect.Width = 0; mouseDspRect.Height = 0;
+                mouseDspRect.Visibility = Visibility.Visible;
             };
             canvImg.MouseLeftButtonUp += (s, mouseE) =>
             {
@@ -126,14 +130,23 @@ namespace ccAuto2
                 canvImg.ReleaseMouseCapture();
                 mouseE.Handled = true;
             };
+            canvImg.MouseRightButtonUp += (s, mouseE) =>
+            {
+                mouseUpP.X = -1;
+                mouseDownP.X -= 1;
+                mouseDspRect.Visibility = Visibility.Collapsed;
+                curSelRect = null;
+            };
 
             canvImg.MouseMove += (s, mouseE) =>
             {                
                 if (mouseDownP.X < 0) return;
+                if (mouseUpP.X >= 0) return;
                 Point p = mouseE.GetPosition(canvImg);
-                var r = PointsToRect(mouseDownP, p);
+                var r = PointsToRect(mouseDownP, p);                
                 if (r.Width <= 0) return;
-                if (r.Height <= 0) return;  
+                if (r.Height <= 0) return;
+                curSelRect = r;
                 Canvas.SetLeft(mouseDspRect, r.X);
                 Canvas.SetTop(mouseDspRect, r.Y);
                 mouseDspRect.Width = r.Width;
@@ -145,13 +158,7 @@ namespace ccAuto2
             };
         }
 
-        class EasyRect
-        {
-            public int X;
-            public int Y;
-            public int Width;
-            public int Height;
-        }
+        
         static EasyRect PointsToRect(Point p1, Point p2)
         {
             EasyRect r = new EasyRect();
@@ -169,7 +176,7 @@ namespace ccAuto2
                 r.Y = (int)p2.Y;
                 r.Height = -r.Height;
             }
-            Console.WriteLine("X=" + r.X.ToString("0.0") + " y=" + r.Y.ToString("0.0")+ " width="+r.Width.ToString("0") + " h="+r.Height.ToString("0"));
+            //Console.WriteLine("X=" + r.X.ToString("0.0") + " y=" + r.Y.ToString("0.0")+ " width="+r.Width.ToString("0") + " h="+r.Height.ToString("0"));
             return r;
         }
 
@@ -229,7 +236,7 @@ namespace ccAuto2
             btnCaptureAndSeg.IsEnabled = false;
             new Thread(() =>
             {
-                DoSam.ExecuteSamProcess(samResult, () =>
+                DoSam.ExecuteSamProcess(samResult, curSelRect , () =>
                 {
                     Dispatcher.BeginInvoke(new Action(() =>
                     {
