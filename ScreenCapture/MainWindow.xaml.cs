@@ -101,25 +101,13 @@ namespace ccAuto2
             WindowComboBox.SelectedIndex = -1;
             await cocCapture.StartPickerCaptureAsync(this);
         }
-
-        double dpiX = 1.0;
-        double dpiY = 1.0;
+        
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             mouseDownP.X = -1;
-            Console.WriteLine("Window loaded reset ouse p");
-            //var interopWindow = new WindowInteropHelper(this);
-            //hwnd = interopWindow.Handle;            
-            var presentationSource = PresentationSource.FromVisual(this);
+            Console.WriteLine("Window loaded reset ouse p");                               
             
-            if (presentationSource != null)
-            {
-                dpiX = presentationSource.CompositionTarget.TransformToDevice.M11;
-                dpiY = presentationSource.CompositionTarget.TransformToDevice.M22;
-            }
-            var controlsWidth = (float)(ControlsGrid.ActualWidth * dpiX);
-            controlsWidth = 0;
-            cocCapture.init(imgWin, controlsWidth);
+            cocCapture.init(imgWin, 0);
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
             InitWindowListAndStart();
