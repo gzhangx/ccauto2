@@ -10,6 +10,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Threading;
 using Windows.Foundation.Metadata;
 
@@ -101,8 +102,11 @@ namespace ccAuto2
                     curCaptureDelay = CAPTURE_DELAY;
                 }
                 curCaptureDelay -= CAPTURE_DELAY_INC;
-                nextCaptureDelay(curCaptureDelay);
-                System.Threading.Thread.Sleep(CAPTURE_DELAY_INC);
+                if (!_needToDie)
+                {
+                    nextCaptureDelay(curCaptureDelay);
+                    System.Threading.Thread.Sleep(CAPTURE_DELAY_INC);
+                }
             }
         }
 
@@ -221,12 +225,9 @@ namespace ccAuto2
         // }
 
         public void Dispose()
-        {
-            Console.WriteLine("closing");
+        {            
             _needToDie = true;
-            _thread.Join();
-            Console.WriteLine("joined");
-            
+            //_thread.Join(); //this could block window thread.           
         }
     }
 }
