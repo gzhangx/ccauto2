@@ -63,6 +63,7 @@
     <Compile Include="CocCapture.cs" />
     <Compile Include="DoSam.cs" />
     <Compile Include="EventRequester.cs" />
+    <Compile Include="GenCapture.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="MainCaptureCreator.cs" />
     <Compile Include="Win32Helper.cs" />

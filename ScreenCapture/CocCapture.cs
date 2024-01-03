@@ -1,4 +1,5 @@
-﻿using ccAuto2;
+﻿using ccauto;
+using ccAuto2;
 using Emgu.CV.OCR;
 using System;
 using System.Collections.Generic;
@@ -17,8 +18,10 @@ namespace ccAuto2
     public class CocCapture : IDisposable
     {
         public const string BSAP_WindowName = "BlueStacks App Player";
-        public MainCaptureCreator creator = new MainCaptureCreator();
-        public IntPtr gameWin { get; private set; }
+        public GenCapture genCapture = new GenCapture();
+        
+        //public MainCaptureCreator creator = new MainCaptureCreator();
+        //public IntPtr gameWin { get; private set; }
 
 
         public bool _needToDie { get; private set; }
@@ -32,55 +35,16 @@ namespace ccAuto2
         //int CAPTUREH = 567;  //1920/1080 240 dpi default
 
         //float dpiX = 1.5f, dpiY = 1.5f;
-
-        class CurWinInfo
-        {
-            public int x;
-            public int y;
-            public int width;
-            public int height;
-            public double DPIX;
-            public double DPIY;
-        }
-        CurWinInfo curWinInfo = new CurWinInfo();
+        
         //returns OK if fine, else error
         public string InitWindowListAndStart()
         {
-            gameWin = IntPtr.Zero;
-            if (ApiInformation.IsApiContractPresent(typeof(Windows.Foundation.UniversalApiContract).FullName, 8))
-            {
-                var pp = Process.GetProcesses();
-                var processesWithWindows = from p in Process.GetProcesses()
-                                           where !string.IsNullOrWhiteSpace(p.MainWindowTitle) && WindowEnumerationHelper.IsWindowValidForCapture(p.MainWindowHandle)
-                                           && string.Equals(p.MainWindowTitle, BSAP_WindowName)
-                                           select p;
-                
-                if (processesWithWindows.Count() == 1)
-                {
-                    creator.StopCapture();
-                    var hwnd = processesWithWindows.First().MainWindowHandle;
-                    Win32Helper.Rect rect = new Win32Helper.Rect();
-                    Win32Helper.GetWindowRect(hwnd, ref rect);
-                    //Win32Helper.SetWindowPos(hwnd, 0, rect.Left, rect.Top, CAPTUREW, CAPTUREH, 0);
-
-                    gameWin = hwnd;
-                    try
-                    {
-                        creator.StartHwndCapture(hwnd);
-                        return "OK";
-                    }
-                    catch (Exception)
-                    {
-                        return ($"Hwnd 0x{hwnd.ToInt32():X8} is not valid for capture!");
-                    }
-                }
-            }
-            return "No suitable window";
+            return genCapture.InitWindowListAndStart(BSAP_WindowName);            
         }
 
         public bool isStarted()
         {
-            return creator.isStarted();
+            return genCapture.isStarted();
         }
         public void Init(EventRequester.RequestAndResult gameResult, Action<byte[]> showImage)
         {
@@ -89,6 +53,25 @@ namespace ccAuto2
             this.showImage = showImage;
             this._thread = new Thread(actionthread);
             this._thread.Start();         
+        }
+
+        public EventRequester.RequestAndResult registerNewEvent(string eventName)
+        {
+            return genCapture.creator.registerNewEvent(eventName);
+        }
+        public void StopCapture()
+        {
+            genCapture.creator.StopCapture();
+        }
+
+        public Task StartPickerCaptureAsync(System.Windows.Window wnd)
+        {
+            return genCapture.creator.StartPickerCaptureAsync(wnd);
+        }
+
+        public void init(System.Windows.Window wnd, float off)
+        {
+            genCapture.creator.init(wnd, off);
         }
 
         private void actionthread()
@@ -111,16 +94,17 @@ namespace ccAuto2
             }
         }
 
+        Win32Helper.Rect rect = new Win32Helper.Rect();
         private void ActionMouseMoveToStore(ImageStore store, int xOff, int yOff)
         {
-            Win32Helper.Rect rect = new Win32Helper.Rect();
-            Win32Helper.GetWindowRect(gameWin, ref rect);
+            //Win32Helper.Rect rect = new Win32Helper.Rect();
+            //Win32Helper.GetWindowRect(genCapture.gameWin, ref rect);
             Console.WriteLine("going to set cursor pos" + rect.Left + "," + rect.Top);
             System.Threading.Thread.Sleep(1000);
             Win32Helper.SetCursorPos(rect.Left, rect.Top);
             System.Threading.Thread.Sleep(1000);
             Console.WriteLine(rect.Left + "," + rect.Top + " adding " + store.rect.Left + "," + store.rect.Top);
-            Win32Helper.SetCursorPos(TranslatePointXToScreen(store.rect.Left + xOff), TranslatePointYToScreen(store.rect.Top+yOff));
+            Win32Helper.SetCursorPos(genCapture.TranslatePointXToScreen(store.rect.Left + xOff), genCapture.TranslatePointYToScreen(store.rect.Top+yOff));
             System.Threading.Thread.Sleep(1000);
             //Console.WriteLine("moving to " + rect.Right + "," + rect.Bottom);
             //Win32Helper.SetCursorPos(rect.Right, rect.Bottom);
@@ -131,15 +115,7 @@ namespace ccAuto2
             ActionMouseMoveToStore(store, xOff, yOff);
             Win32Helper.SendMouseClick();
         }
-
-        int TranslatePointXToScreen(int x)
-        {
-            return curWinInfo.x + (int)(x * curWinInfo.DPIX);
-        }
-        int TranslatePointYToScreen(int y)
-        {
-            return curWinInfo.y + (int)(y * curWinInfo.DPIY);
-        }
+        
         int debugPos = 0;
         private void processBuffer(byte[] buf)
         {            
@@ -147,16 +123,10 @@ namespace ccAuto2
             showImage(buf);
 
             Console.WriteLine("got buffer " + (debugPos++));
-            var src = ImageLoader.bufToMat(buf);
-            Console.WriteLine("got buffer and converted to image");
-            Win32Helper.Rect rect = new Win32Helper.Rect();
-            Win32Helper.GetWindowRect(gameWin, ref rect);
-            curWinInfo.x = rect.Left;
-            curWinInfo.y= rect.Top;
-            curWinInfo.width = rect.Right - rect.Left;
-            curWinInfo.height = rect.Bottom - rect.Top;
-            curWinInfo.DPIX = curWinInfo.width* 1.0 / src.Width;
-            curWinInfo.DPIY = curWinInfo.height* 1.0 / src.Height;
+            var src = genCapture.updateWindowRef(buf);
+            //Win32Helper.Rect rect = new Win32Helper.Rect();
+            Win32Helper.GetWindowRect(genCapture.gameWin, ref rect);
+            Console.WriteLine("got buffer and converted to image");            
             foreach (var store in imageStore.stores)
             {
                 var diff = ImageLoader.CompareToMat(src, store);

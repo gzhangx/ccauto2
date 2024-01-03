@@ -63,8 +63,8 @@ namespace ccAuto2
             imgWin.Width= 20;
             imgWin.Height= 20;
             imgWin.Show();
-            gameResult = cocCapture.creator.registerNewEvent("gameResult");
-            samResult = cocCapture.creator.registerNewEvent("samResult");
+            gameResult = cocCapture.registerNewEvent("gameResult");
+            samResult = cocCapture.registerNewEvent("samResult");
             //imgWin.Hide();
 
             cocCapture.Init(gameResult, buf =>
@@ -89,9 +89,9 @@ namespace ccAuto2
 
         private async void PickerButton_Click(object sender, RoutedEventArgs e)
         {
-            cocCapture.creator.StopCapture();
+            cocCapture.StopCapture();
             WindowComboBox.SelectedIndex = -1;
-            await cocCapture.creator.StartPickerCaptureAsync(this);
+            await cocCapture.StartPickerCaptureAsync(this);
         }
 
         double dpiX = 1.0;
@@ -109,7 +109,7 @@ namespace ccAuto2
             }
             var controlsWidth = (float)(ControlsGrid.ActualWidth * dpiX);
             controlsWidth = 0;
-            cocCapture.creator.init(imgWin, controlsWidth);
+            cocCapture.init(imgWin, controlsWidth);
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
             InitWindowListAndStart();
@@ -121,7 +121,7 @@ namespace ccAuto2
             const string StopCapture = "Stop Capturing";
             if (cocCapture.isStarted())
             {
-                cocCapture.creator.StopCapture();
+                cocCapture.StopCapture();
                 WindowComboBox.SelectedIndex = -1;
                 StopButton.Content = "Start Capture";                
             }
@@ -174,7 +174,7 @@ namespace ccAuto2
                     {
                         if (!started)
                         {
-                            cocCapture.creator.StopCapture();
+                            cocCapture.StopCapture();
                         }
                         btnCaptureAndSeg.IsEnabled = true;
                     }));
