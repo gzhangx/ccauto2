@@ -109,5 +109,10 @@ namespace ccAuto2
                 eventRequester.processRequest(buf);
             }
         }
+
+        public bool isStarted()
+        {
+            return sample.isStarted();
+        }
     }
 }

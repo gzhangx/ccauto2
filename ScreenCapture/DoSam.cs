@@ -13,7 +13,7 @@ namespace ccauto
             samResult.doRequest(tbf =>
             {
                 var tmStr = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
-                var fileName = "d:\\segan\\out\\test\\test" + tmStr + ".png";
+                var fileName = "d:\\segan\\out\\coc\\test" + tmStr + ".png";
                 File.WriteAllBytes(fileName, tbf);
                 var command = "d:\\segan\\testwithfile.bat " + fileName;
                 ExecuteCmd(command);

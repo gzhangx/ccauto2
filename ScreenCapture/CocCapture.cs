@@ -78,6 +78,10 @@ namespace ccAuto2
             return "No suitable window";
         }
 
+        public bool isStarted()
+        {
+            return creator.isStarted();
+        }
         public void Init(EventRequester.RequestAndResult gameResult, Action<byte[]> showImage)
         {
             imageStore.LoadAll();

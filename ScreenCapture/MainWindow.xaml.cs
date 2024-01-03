@@ -118,7 +118,8 @@ namespace ccAuto2
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
             var curText = StopButton.Content as string;
-            if (String.Equals(curText, "Stop Capture"))
+            const string StopCapture = "Stop Capturing";
+            if (cocCapture.isStarted())
             {
                 cocCapture.creator.StopCapture();
                 WindowComboBox.SelectedIndex = -1;
@@ -127,6 +128,7 @@ namespace ccAuto2
             else
             {
                 InitWindowListAndStart();
+                StopButton.Content = StopCapture;
             }
         }
 
@@ -157,11 +159,20 @@ namespace ccAuto2
        
         private void Button_Click(object sender, RoutedEventArgs e)
         {
+            bool started = cocCapture.isStarted();
+            if (!started)
+            {
+                InitWindowListAndStart();
+            }
             btnCaptureAndSeg.IsEnabled = false;
             DoSam.ExecuteSamProcess(samResult, () =>
             {
                 Dispatcher.BeginInvoke(new Action(() =>
                 {
+                    if (!started)
+                    {
+                        cocCapture.creator.StopCapture();
+                    }
                     btnCaptureAndSeg.IsEnabled = true;
                 }));
             });
