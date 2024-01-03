@@ -222,8 +222,10 @@ namespace ccAuto2
 
         public void Dispose()
         {
+            Console.WriteLine("closing");
             _needToDie = true;
             _thread.Join();
+            Console.WriteLine("joined");
             
         }
     }

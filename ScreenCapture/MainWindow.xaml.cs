@@ -106,6 +106,8 @@ namespace ccAuto2
         double dpiY = 1.0;
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            mouseDownP.X = -1;
+            Console.WriteLine("Window loaded reset ouse p");
             //var interopWindow = new WindowInteropHelper(this);
             //hwnd = interopWindow.Handle;            
             var presentationSource = PresentationSource.FromVisual(this);
@@ -121,7 +123,70 @@ namespace ccAuto2
             //InitComposition(controlsWidth + 100);
             //InitComposition(0);
             InitWindowListAndStart();
+            canvImg.MouseLeftButtonDown += (s,mouseE)=>
+            {
+                Point p = mouseE.GetPosition(canvImg);
+                mouseDownP = p;
+                canvImg.CaptureMouse();
+                mouseE.Handled = true;
+            };
+            canvImg.MouseLeftButtonUp += (s, mouseE) =>
+            {
+                Point p = mouseE.GetPosition(canvImg);
+                mouseUpP = p;
+                Console.WriteLine("release mouse cap");
+                canvImg.ReleaseMouseCapture();
+                mouseE.Handled = true;
+            };
+
+            canvImg.MouseMove += (s, mouseE) =>
+            {                
+                if (mouseDownP.X < 0) return;
+                Point p = mouseE.GetPosition(canvImg);
+                var r = PointsToRect(mouseDownP, p);
+                if (r.Width <= 0) return;
+                if (r.Height <= 0) return;  
+                Canvas.SetLeft(mouseDspRect, r.X);
+                Canvas.SetTop(mouseDspRect, r.Y);
+                mouseDspRect.Width = r.Width;
+                mouseDspRect.Height = r.Height;
+                var brush = new System.Windows.Media.SolidColorBrush();
+                brush.Color = System.Windows.Media.Colors.Red;
+                brush.Opacity = 0.5;
+                mouseE.Handled = true;
+            };
         }
+
+        class EasyRect
+        {
+            public int X;
+            public int Y;
+            public int Width;
+            public int Height;
+        }
+        static EasyRect PointsToRect(Point p1, Point p2)
+        {
+            EasyRect r = new EasyRect();
+            r.X = (int)p1.X;
+            r.Width = (int)(p2.X - p1.X);
+            if (r.Width < 0)
+            {
+                r.X = (int)p2.X;
+                r.Width = -r.Width;
+            } 
+            r.Y = (int) p1.Y;
+            r.Height = (int)(p2.Y - p1.Y);
+            if (r.Height <0)
+            {
+                r.Y = (int)p2.Y;
+                r.Height = -r.Height;
+            }
+            Console.WriteLine("X=" + r.X.ToString("0.0") + " y=" + r.Y.ToString("0.0")+ " width="+r.Width.ToString("0") + " h="+r.Height.ToString("0"));
+            return r;
+        }
+
+        Point mouseDownP;
+        Point mouseUpP;
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
