@@ -135,20 +135,21 @@ namespace ccAuto2
             showImage(buf);
 
             Console.WriteLine("got buffer " + (debugPos++));
-            var src = genCapture.updateWindowRef(buf);
-            //Win32Helper.Rect rect = new Win32Helper.Rect();
-            Win32Helper.GetWindowRect(genCapture.gameWin, ref rect);
-            Console.WriteLine("got buffer and converted to image");
-            if (!ProcessCOC) return;
-            foreach (var store in imageStore.stores)
+            using (var src = genCapture.updateWindowRef(buf))
             {
-                var diff = ImageLoader.CompareToMat(src, store);
-
-                if (diff > 0.5)
+                //Win32Helper.Rect rect = new Win32Helper.Rect();
+                Win32Helper.GetWindowRect(genCapture.gameWin, ref rect);
+                Console.WriteLine("got buffer and converted to image");
+                if (!ProcessCOC) return;
+                foreach (var store in imageStore.stores)
                 {
-                    Console.WriteLine("for " + store.name + " diff=" + diff.ToString("0.00"));
-                    string[] autoClickNames = new string[]
+                    var diff = ImageLoader.CompareToMat(src, store);
+
+                    if (diff > 0.5)
                     {
+                        Console.WriteLine("for " + store.name + " diff=" + diff.ToString("0.00"));
+                        string[] autoClickNames = new string[]
+                        {
                         "AnyoneThereReload",
                         "BuilderBase_ReturnHome",
                         "BuilderBase_ReturnHome_2",
@@ -159,40 +160,42 @@ namespace ccAuto2
                         "BuilderBase_Battle_BattleMachine",
                         "BuilderBaseBattleSurrender",
                         "BuilderBaseBattleSurrenderOK",
-                    };
-                    foreach (string name in autoClickNames)
-                    {
-                        if (store.name.Equals(name))
+                        };
+                        foreach (string name in autoClickNames)
                         {
-                            int offsetX = 20;
-                            int offsetY = 20;
-                            if (store.name.Equals("AnyoneThereReload"))
+                            if (store.name.Equals(name))
                             {
-                                offsetX = 50;
-                                offsetY = 100;
-                            } else if (name.Equals("BuilderBaseBattleSurrenderOK"))
-                            {
-                                offsetX = 333;
-                                offsetY = 216;
-                            }
-                            Console.WriteLine("Doing auto action for " + name);
-                            ActionMoveToStoreAndClick(store, offsetX, offsetY);
+                                int offsetX = 20;
+                                int offsetY = 20;
+                                if (store.name.Equals("AnyoneThereReload"))
+                                {
+                                    offsetX = 50;
+                                    offsetY = 100;
+                                }
+                                else if (name.Equals("BuilderBaseBattleSurrenderOK"))
+                                {
+                                    offsetX = 333;
+                                    offsetY = 216;
+                                }
+                                Console.WriteLine("Doing auto action for " + name);
+                                ActionMoveToStoreAndClick(store, offsetX, offsetY);
 
-                            if (name.Equals("BuilderBase_Battle_BattleMachine"))
-                            {
-                                Console.WriteLine("clicked battlemachine, click above");
-                                Thread.Sleep(1000);
-                                ActionMoveToStoreAndClick(store, offsetX, -100);
+                                if (name.Equals("BuilderBase_Battle_BattleMachine"))
+                                {
+                                    Console.WriteLine("clicked battlemachine, click above");
+                                    Thread.Sleep(1000);
+                                    ActionMoveToStoreAndClick(store, offsetX, -100);
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        Console.WriteLine(" " + store.name + " diff=" + diff.ToString("0.00"));
+                    }
                 }
-                else
-                {
-                    Console.WriteLine(" " + store.name + " diff=" + diff.ToString("0.00"));
-                }                
+                Win32Helper.SetCursorPos(rect.Left, rect.Top);
             }
-            Win32Helper.SetCursorPos(rect.Left, rect.Top);
         }
 
         protected virtual void Dispose(bool disposing)
