@@ -17,7 +17,7 @@ namespace ccauto
     }
     internal class DoSam
     {
-        public static void ExecuteSamProcess(EventRequester.RequestAndResult samResult, EasyRect selRect, Action endAction)
+        public static void ExecuteSamProcess(EventRequester.RequestAndResult samResult, EasyRect selRect, Action endAction, bool doSam = true)
         {
             samResult.doRequest(tbf =>
             {
@@ -37,9 +37,12 @@ namespace ccauto
                     }
                 }
                 File.WriteAllBytes(fileName, tbf);
-                var command = "d:\\segan\\testwithfile.bat " + fileName;
-                ExecuteCmd(command);
-                Console.WriteLine("cmd.exe /c " + command);
+                if (doSam)
+                {
+                    var command = "d:\\segan\\testwithfile.bat " + fileName;
+                    ExecuteCmd(command);
+                    Console.WriteLine("cmd.exe /c " + command);
+                }
                 endAction();
             });
         }

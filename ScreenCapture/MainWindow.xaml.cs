@@ -316,6 +316,32 @@ namespace ccAuto2
 
         }
 
+        private void btnCaptureOnly_Click(object sender, RoutedEventArgs e)
+        {
+            bool started = cocCapture.isStarted();
+            if (!started)
+            {
+                if (!InitWindowListAndStart()) return;
+            }
+            btnCaptureAndSeg.IsEnabled = false;
+            gameResult.doRequest(bf => { });
+            new Thread(() =>
+            {
+                DoSam.ExecuteSamProcess(samResult, curSelRect, () =>
+                {
+                    Dispatcher.BeginInvoke(new Action(() =>
+                    {
+                        if (!started)
+                        {
+                            cocCapture.StopCapture();
+                        }
+                        btnCaptureAndSeg.IsEnabled = true;
+                    }));
+                }, false);
+            }).Start();
+
+        }
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             cocCapture.Dispose();

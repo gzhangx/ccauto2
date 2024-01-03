@@ -83,29 +83,23 @@ namespace ccAuto2
         }
 
         private void actionthread()
-        {
+        {            
             while (!_needToDie)
             {
                 if (curCaptureDelay <= 0)
                 {
-                    gameResult.doRequest(tb => { });
-
-                    while (!_needToDie)
-                    {
-                        var buf = gameResult.waitFor(2000);
-                        if (buf != null)
-                        {
-                            processBuffer(buf);
-                            break;
-                        }
-                    }
+                    gameResult.doRequest(tb => { });                    
                     curCaptureDelay = CAPTURE_DELAY;
                 }
                 curCaptureDelay -= CAPTURE_DELAY_INC;
                 if (!_needToDie)
                 {
-                    nextCaptureDelay(curCaptureDelay);
-                    System.Threading.Thread.Sleep(CAPTURE_DELAY_INC);
+                    nextCaptureDelay(curCaptureDelay);                    
+                    var buf = gameResult.waitFor(CAPTURE_DELAY_INC);
+                    if (buf != null)
+                    {
+                        processBuffer(buf);
+                    }
                 }
             }
         }

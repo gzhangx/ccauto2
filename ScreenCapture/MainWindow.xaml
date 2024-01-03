@@ -54,6 +54,7 @@
                     </ComboBox.ItemTemplate>
                 </ComboBox>
                 <Button Click="Button_Click" x:Name="btnCaptureAndSeg">Capture And Seg</Button>
+                <Button Click="btnCaptureOnly_Click"  x:Name="btnCaptureOnly">Capture Only</Button>
                 <Button Click="btnTest_Click" x:Name="btnTest">Test Keys</Button>
                 <TextBlock x:Name="txtInfo">aaaa</TextBlock>
             </StackPanel>
