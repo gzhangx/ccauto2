@@ -17,6 +17,9 @@ namespace ccAuto2
 {
     public class CocCapture : IDisposable
     {
+        const int CAPTURE_DELAY = 8000; //ms
+        const int CAPTURE_DELAY_INC = 100; //ms;
+        int curCaptureDelay = 0;
         public const string BSAP_WindowName = "BlueStacks App Player";
         public GenCapture genCapture = new GenCapture();
         
@@ -30,6 +33,9 @@ namespace ccAuto2
         private bool disposedValue;
         private ImageLoader imageStore = new ImageLoader();
         private Action<byte[]> showImage;
+        private Action<int> nextCaptureDelay;
+
+        public bool ProcessCOC = false;
 
         //int CAPTUREW = 982;
         //int CAPTUREH = 567;  //1920/1080 240 dpi default
@@ -46,13 +52,14 @@ namespace ccAuto2
         {
             return genCapture.isStarted();
         }
-        public void Init(EventRequester.RequestAndResult gameResult, Action<byte[]> showImage)
+        public void Init(EventRequester.RequestAndResult gameResult, Action<byte[]> showImage, Action<int> nextCaptureDelay)
         {
             imageStore.LoadAll();
             this.gameResult = gameResult;
             this.showImage = showImage;
             this._thread = new Thread(actionthread);
             this._thread.Start();         
+            this.nextCaptureDelay = nextCaptureDelay;
         }
 
         public EventRequester.RequestAndResult registerNewEvent(string eventName)
@@ -78,19 +85,24 @@ namespace ccAuto2
         {
             while (!_needToDie)
             {
-                System.Threading.Thread.Sleep(8000);
-
-                gameResult.doRequest(tb => { });
-
-                while (!_needToDie)
+                if (curCaptureDelay <= 0)
                 {
-                    var buf = gameResult.waitFor(2000);
-                    if (buf != null)
+                    gameResult.doRequest(tb => { });
+
+                    while (!_needToDie)
                     {
-                        processBuffer(buf);
-                        break;
+                        var buf = gameResult.waitFor(2000);
+                        if (buf != null)
+                        {
+                            processBuffer(buf);
+                            break;
+                        }
                     }
+                    curCaptureDelay = CAPTURE_DELAY;
                 }
+                curCaptureDelay -= CAPTURE_DELAY_INC;
+                nextCaptureDelay(curCaptureDelay);
+                System.Threading.Thread.Sleep(CAPTURE_DELAY_INC);
             }
         }
 
@@ -126,7 +138,8 @@ namespace ccAuto2
             var src = genCapture.updateWindowRef(buf);
             //Win32Helper.Rect rect = new Win32Helper.Rect();
             Win32Helper.GetWindowRect(genCapture.gameWin, ref rect);
-            Console.WriteLine("got buffer and converted to image");            
+            Console.WriteLine("got buffer and converted to image");
+            if (!ProcessCOC) return;
             foreach (var store in imageStore.stores)
             {
                 var diff = ImageLoader.CompareToMat(src, store);

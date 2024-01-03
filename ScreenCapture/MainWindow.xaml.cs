@@ -83,6 +83,14 @@ namespace ccAuto2
                         canvImg.Source = bitmapimage;
                     }
                 });
+            }, delMs =>
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    int toNext = delMs / 1000;
+                    if (toNext < 0) toNext = 0;
+                    this.Title = "Next Cap " + toNext;
+                });
             });
         }
 
@@ -239,8 +247,14 @@ namespace ccAuto2
 
         }
 
+        private void btnProcessCoc_Click(object sender, RoutedEventArgs e)
+        {
+            cocCapture.ProcessCOC = !cocCapture.ProcessCOC;
 
-       
+            btnProcessCoc.Content = cocCapture.ProcessCOC ? "Stop Process COC" : "Start Process COC";
+
+
+        }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
