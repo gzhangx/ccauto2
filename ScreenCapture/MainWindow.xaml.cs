@@ -144,14 +144,15 @@ namespace ccAuto2
         }
 
         
-        private void InitWindowListAndStart()
+        private bool InitWindowListAndStart()
         {
             var error = cocCapture.InitWindowListAndStart();
             if ("OK".Equals(error))
             {
-                return;
+                return true;
             }
             MessageBox.Show(error);
+            return false;
             
         }
 
@@ -162,20 +163,23 @@ namespace ccAuto2
             bool started = cocCapture.isStarted();
             if (!started)
             {
-                InitWindowListAndStart();
+                if (!InitWindowListAndStart()) return;
             }
             btnCaptureAndSeg.IsEnabled = false;
-            DoSam.ExecuteSamProcess(samResult, () =>
+            new Thread(() =>
             {
-                Dispatcher.BeginInvoke(new Action(() =>
+                DoSam.ExecuteSamProcess(samResult, () =>
                 {
-                    if (!started)
+                    Dispatcher.BeginInvoke(new Action(() =>
                     {
-                        cocCapture.creator.StopCapture();
-                    }
-                    btnCaptureAndSeg.IsEnabled = true;
-                }));
-            });
+                        if (!started)
+                        {
+                            cocCapture.creator.StopCapture();
+                        }
+                        btnCaptureAndSeg.IsEnabled = true;
+                    }));
+                });
+            }).Start();            
             //ConvertToBitmap(sample.Visual);            
         }
       
