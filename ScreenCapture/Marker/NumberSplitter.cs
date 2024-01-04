@@ -67,7 +67,7 @@ namespace ccauto.Marker
                 if (foundStart)
                 {
                     if (curXmaxY > maxY) maxY = curXmaxY;
-                    if (curXminY < minY) minY = curXmaxY;
+                    if (curXminY < minY) minY = curXminY;
                 }
                 if (endX > 0)
                 {

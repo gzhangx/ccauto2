@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -300,6 +301,11 @@ namespace ccauto.Marker
             var recs = NumberSplitter.SplitCocNumbers(selectedMat);            
             Mat newMat = origImage.Clone();
 
+            if (curSelRect.Width < 200 && curSelRect.Height < 100)
+            {
+                SaveImageAsPPM(selectedMat, configDir+"/selppm.txt"); 
+            }
+
             var clr = new Emgu.CV.Structure.MCvScalar();
             var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
             foreach (var item in recs)
@@ -312,6 +318,25 @@ namespace ccauto.Marker
             var imgBuf = GCvUtils.MatToBuff(newMat);
             //imgBuf = GCvUtils.MatToBuff(origImage);
             ShowImageFromBytes(imgBuf);
+        }
+
+        public static void SaveImageAsPPM(Mat mat, string fileName)
+        {
+            StringBuilder sb = new StringBuilder();
+            var data = mat.GetData();
+            for (int y = 0; y < mat.Height; y++)
+            {
+                for (int x = 0; x < mat.Width; x++)
+                {
+                    var cr = (byte)data.GetValue(y, x, 0);
+                    var cg = (byte)data.GetValue(y, x, 1);
+                    var cb = (byte)data.GetValue(y, x, 2);
+                    var rtn = cr.ToString("X2") + cg.ToString("X2") + cb.ToString("X2");
+                    sb.Append(rtn).Append(" ");
+                }
+                sb.Append("\r\n");
+            }
+            File.WriteAllText(fileName, sb.ToString());
         }
     }
 }
