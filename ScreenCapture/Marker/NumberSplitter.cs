@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ccauto.Marker
 {
-    internal class NumberSplitter
+    public class NumberSplitter
     {
         class XPos
         {
@@ -19,7 +19,7 @@ namespace ccauto.Marker
                 this.x2 = x2;
             }
         }
-        static List<Rectangle> SplitCocNumbers(Bitmap orig)
+        public static List<Rectangle> SplitCocNumbers(Bitmap orig)
         {
             Func<Color, bool> isWhite = (Color c) =>
             {
