@@ -156,6 +156,9 @@ namespace ccAuto2
                 brush.Opacity = 0.5;
                 mouseE.Handled = true;
             };
+
+            //Debug Quick
+            btnMarkerWin_Click(null,null);
         }
 
         

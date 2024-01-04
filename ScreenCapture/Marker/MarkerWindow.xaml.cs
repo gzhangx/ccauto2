@@ -121,32 +121,55 @@ namespace ccauto.Marker
                 if (mouseUpP.X >= 0) return;
                 Point p = mouseE.GetPosition(canvImg);
                 var r = PointsToRect(mouseDownP, p);
-                if (r.X + r.Width >= origImage.Width)
-                {
-                    r.Width = origImage.Width - r.X;
-                }
-                if (r.Y + r.Height >= origImage.Height)
-                {
-                    r.Height = origImage.Height - r.Y;
-                }
-                if (r.Width <= 0) return;
-                if (r.Height <= 0) return;
-                
-                curSelRect = r;
-                selectedMat = new Mat(origImage, r.toRectangle());
-                Canvas.SetLeft(mouseDspRect, r.X);
-                Canvas.SetTop(mouseDspRect, r.Y);
-                mouseDspRect.Width = r.Width;
-                mouseDspRect.Height = r.Height;
-                var brush = new System.Windows.Media.SolidColorBrush();
-                brush.Color = System.Windows.Media.Colors.Red;
-                brush.Opacity = 0.5;
+                SelectCropImage(r);
                 mouseE.Handled = true;
                 Dispatcher.Invoke(() =>
                 {
                     txtInfo.Text = "("+p.X.ToString("0")+","+p.Y.ToString("0")+")";
                 });
             };
+
+            DebugQuick();
+
+        }
+
+        bool SelectCropImage(EasyRect r)
+        {
+            if (r.X + r.Width >= origImage.Width)
+            {
+                r.Width = origImage.Width - r.X;
+            }
+            if (r.Y + r.Height >= origImage.Height)
+            {
+                r.Height = origImage.Height - r.Y;
+            }
+            if (r.Width <= 0) return false;
+            if (r.Height <= 0) return false;
+
+            curSelRect = r;
+            selectedMat = new Mat(origImage, r.toRectangle());
+            Canvas.SetLeft(mouseDspRect, r.X);
+            Canvas.SetTop(mouseDspRect, r.Y);
+            mouseDspRect.Width = r.Width;
+            mouseDspRect.Height = r.Height;
+            return true;
+        }
+
+        void DebugQuick()
+        {
+            //Debug Quick
+            var fileBytes = File.ReadAllBytes("D:\\segan\\out\\coc\\test2024-01-03-094231.png");
+            origImage = GCvUtils.bufToMat(fileBytes);
+            //Bitmap bmp = (Bitmap)Bitmap.FromFile(openFileDialog.FileName);  
+
+            ShowImageFromBytes(fileBytes);
+            SelectCropImage(new EasyRect()
+            {
+                X=454,
+                Y=354,
+                Width=20,
+                Height=20,
+            });
         }
 
         private void btnFindAllSimilar_Click(object sender, RoutedEventArgs e)
