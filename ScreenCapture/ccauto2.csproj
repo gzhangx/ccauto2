@@ -66,6 +66,7 @@
     <Compile Include="GenCapture.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="MainCaptureCreator.cs" />
+    <Compile Include="Marker\NumberSplitter.cs" />
     <Compile Include="Win32Helper.cs" />
     <Compile Include="WindowEnumerationHelper.cs" />
     <Page Include="MainWindow.xaml">
