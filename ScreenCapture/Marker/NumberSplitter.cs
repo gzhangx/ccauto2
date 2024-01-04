@@ -1,9 +1,7 @@
-﻿using System;
+﻿using Emgu.CV;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ccauto.Marker
 {
@@ -19,16 +17,17 @@ namespace ccauto.Marker
                 this.x2 = x2;
             }
         }
-        public static List<Rectangle> SplitCocNumbers(Bitmap orig)
+        public static List<Rectangle> SplitCocNumbers(Mat orig)
         {
-            Func<Color, bool> isWhite = (Color c) =>
+            Func<byte,byte,byte, bool> isWhite = (c1,c2,c3) =>
             {
-                return c.R > 0xf0 && c.G > 0xf0 && c.B >= 0xf0;
+                return c1 > 0xf0 && c2 > 0xf0 && c3 > 0xf0;
             };
             bool foundStart = false;
             int startX = -1;
             int minY = 100, maxY = 0;
             List<XPos> all = new List<XPos>();
+            var data = orig.GetData();
             for (int x = 0; x < orig.Width; x++)
             {
                 int curXminY = 100;
@@ -37,8 +36,11 @@ namespace ccauto.Marker
                 int endX = -1;
                 for (int y = 0; y < orig.Height; y++)
                 {
-                    Color c = orig.GetPixel(x, y);
-                    if (isWhite(c))
+                    //Color c = orig.GetPixel(x, y);
+                    var c1 = (byte)data.GetValue(y, x ,0);
+                    var c2 = (byte)data.GetValue(y, x, 1);
+                    var c3 = (byte)data.GetValue(y, x, 2);
+                    if (isWhite(c1,c2,c3))
                     {
                         whiteCount++;
                         if (y > curXmaxY) curXmaxY = y;

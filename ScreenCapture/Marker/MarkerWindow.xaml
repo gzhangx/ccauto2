@@ -23,8 +23,12 @@
                 </ComboBox>
                 <ComboBox x:Name="cmbSavedImages">
                 </ComboBox>
+                <ComboBox x:Name="cmbClassNames">
+                </ComboBox>
                 <Button x:Name="btnLoadImage" Click="btnLoadImage_Click">Load Image</Button>
                 <Button x:Name="btnFindAllSimilar" Click="btnFindAllSimilar_Click">Find Similar</Button>
+                <Button x:Name="btnSplitNumber" Click="btnSplitNumber_Click">Split Number</Button>
+                <TextBox x:Name="txtSplitMatchNumber" Text="SplitNumberMatch"></TextBox>
                 <TextBox x:Name="txtPosition" TextChanged="txtPosition_TextChanged"></TextBox>
             </StackPanel>
             <TextBlock x:Name="txtInfo" Grid.Row="1">aaaa</TextBlock>

@@ -165,14 +165,24 @@ namespace ccauto.Marker
                 ShowSelectedImage(file);
 
             };
+            initClasses();
             initSavedImageFiles();
             //ShowSelectedImage();
 
         }        
 
+        void initClasses()
+        {
+            var lines = File.ReadAllLines(configDir + "\\names.txt");
+            foreach (var line in lines)
+            {
+                cmbClassNames.Items.Add(line.Trim());
+            }
+            if (cmbClassNames.SelectedIndex < 0) cmbClassNames.SelectedIndex = 0;
+        }
         void initSavedImageFiles()
         {
-            var files = Directory.EnumerateFiles(configDir);
+            var files = Directory.EnumerateFiles(configDir+"\\images");
             Regex reg = new Regex("test\\d+-\\d+-\\d+-\\d+.png$");
             foreach (var file in files)
             {
@@ -272,6 +282,36 @@ namespace ccauto.Marker
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             parent.Close();
+        }
+
+        private void btnSplitNumber_Click(object sender, RoutedEventArgs e)
+        {
+            if (origImage == null)
+            {
+                MessageBox.Show("No image");
+                return;
+            }
+            if (selectedMat == null)
+            {
+                MessageBox.Show("Nothing selected");
+                return;
+            }
+
+            var recs = NumberSplitter.SplitCocNumbers(selectedMat);            
+            Mat newMat = origImage.Clone();
+
+            var clr = new Emgu.CV.Structure.MCvScalar();
+            var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
+            foreach (var item in recs)
+            {
+                //Console.WriteLine("doing at "+item.X+"/"+item.Y);
+                CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X + curSelRect.X, (int)item.Y + curSelRect.Y, item.Width, item.Height), clr, 1, lineType);
+                //CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y - 10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
+            }
+
+            var imgBuf = GCvUtils.MatToBuff(newMat);
+            //imgBuf = GCvUtils.MatToBuff(origImage);
+            ShowImageFromBytes(imgBuf);
         }
     }
 }

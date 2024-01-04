@@ -56,12 +56,12 @@ namespace ccauto
                                     sb.Append("\r\n");
                                 }
                                 File.WriteAllText(fileName+".txt", sb.ToString());
-                                var imgs = SplitCocNumbers(croppedImg);
-                                Directory.CreateDirectory(fileName+"_dir");
-                                for (int i = 0; i < imgs.Count; i++) {
-                                    var img = imgs[i];
-                                    img.Save(fileName + "_dir\\" + i + ".png");
-                                }
+                                //var imgs = SplitCocNumbers(croppedImg);
+                                //Directory.CreateDirectory(fileName+"_dir");
+                                //for (int i = 0; i < imgs.Count; i++) {
+                                //    var img = imgs[i];
+                                //    img.Save(fileName + "_dir\\" + i + ".png");
+                                //}
                             }
                         }
                     }
@@ -77,30 +77,18 @@ namespace ccauto
             });
         }
 
-        class XPos
-        {
-            public int x1;
-            public int x2;
-            public XPos(int x1, int x2)
-            {
-                this.x1 = x1;
-                this.x2 = x2;
-            }
-        }
-        static List<Bitmap> SplitCocNumbers(Bitmap orig)
-        {
-            var rects = ccauto.Marker.NumberSplitter.SplitCocNumbers(orig);
 
-
-
-            List<Bitmap> bmps = new List<Bitmap>();            
-            foreach(var cur in rects)
-            {
-                var bmp = CropImage(orig, cur);
-                bmps.Add(bmp);
-            }
-            return bmps;
-        }
+        //static List<Bitmap> SplitCocNumbers(Bitmap orig)
+        //{
+        //    var rects = ccauto.Marker.NumberSplitter.SplitCocNumbers(orig);
+        //    List<Bitmap> bmps = new List<Bitmap>();            
+        //    foreach(var cur in rects)
+        //    {
+        //        var bmp = CropImage(orig, cur);
+        //        bmps.Add(bmp);
+        //    }
+        //    return bmps;
+        //}
 
         public static Bitmap CropImage(Bitmap img, Rectangle srcRect, Rectangle dstRect)
         {
