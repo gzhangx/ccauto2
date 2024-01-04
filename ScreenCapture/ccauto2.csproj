@@ -66,6 +66,9 @@
     <Compile Include="GenCapture.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="MainCaptureCreator.cs" />
+    <Compile Include="Marker\MarkerWindow.xaml.cs">
+      <DependentUpon>MarkerWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Marker\NumberSplitter.cs" />
     <Compile Include="Win32Helper.cs" />
     <Compile Include="WindowEnumerationHelper.cs" />
@@ -81,6 +84,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Marker\MarkerWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

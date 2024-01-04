@@ -53,6 +53,7 @@
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>
+                <Button Click="btnMarkerWin_Click"  x:Name="btnMarkerWin">Open Marker</Button>
                 <Button Click="Button_Click" x:Name="btnCaptureAndSeg">Capture And Seg</Button>
                 <Button Click="btnCaptureOnly_Click"  x:Name="btnCaptureOnly">Capture Only</Button>
                 <Button Click="btnTest_Click" x:Name="btnTest">Test Keys</Button>

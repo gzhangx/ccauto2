@@ -24,6 +24,7 @@
 
 using CaptureSampleCore;
 using ccauto;
+using ccauto.Marker;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -109,9 +110,8 @@ namespace ccAuto2
             Console.WriteLine("Window loaded reset ouse p");                               
             
             cocCapture.init(imgWin, 0);
-            //InitComposition(controlsWidth + 100);
-            //InitComposition(0);
-            InitWindowListAndStart();
+            //don't start capture initially
+            //InitWindowListAndStart();
             canvImg.MouseLeftButtonDown += (s,mouseE)=>
             {
                 Point p = mouseE.GetPosition(canvImg);
@@ -340,6 +340,12 @@ namespace ccAuto2
                 }, false);
             }).Start();
 
+        }
+
+        private void btnMarkerWin_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new MarkerWindow();
+            win.Show();
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
