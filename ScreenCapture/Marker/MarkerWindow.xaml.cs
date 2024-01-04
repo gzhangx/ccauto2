@@ -318,6 +318,7 @@ namespace ccauto.Marker
             var imgBuf = GCvUtils.MatToBuff(newMat);
             //imgBuf = GCvUtils.MatToBuff(origImage);
             ShowImageFromBytes(imgBuf);
+            txtInfo.Text = "Splited " + recs.Count + " parts";
         }
 
         public static void SaveImageAsPPM(Mat mat, string fileName)
