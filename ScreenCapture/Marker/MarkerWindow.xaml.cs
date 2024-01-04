@@ -117,16 +117,16 @@ namespace ccauto.Marker
 
             canvImg.MouseMove += (s, mouseE) =>
             {
-                if (mouseDownP.X < 0) return;
-                if (mouseUpP.X >= 0) return;
                 Point p = mouseE.GetPosition(canvImg);
                 var r = PointsToRect(mouseDownP, p);
-                SelectCropImage(r);
                 mouseE.Handled = true;
                 Dispatcher.Invoke(() =>
                 {
-                    txtInfo.Text = "("+p.X.ToString("0")+","+p.Y.ToString("0")+")";
+                    txtInfo.Text = "(" + p.X.ToString("0") + "," + p.Y.ToString("0") + ")";
                 });
+                if (mouseDownP.X < 0) return;
+                if (mouseUpP.X >= 0) return;                
+                SelectCropImage(r);                
             };
 
             DebugQuick();
@@ -165,10 +165,10 @@ namespace ccauto.Marker
             ShowImageFromBytes(fileBytes);
             SelectCropImage(new EasyRect()
             {
-                X=454,
-                Y=354,
-                Width=20,
-                Height=20,
+                X=235,
+                Y=331,
+                Width=25,
+                Height=24,
             });
         }
 
