@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ccauto.Marker"
         mc:Ignorable="d"
-        Title="MarkerWindow" Height="450" Width="800" Loaded="Window_Loaded">
+        Title="MarkerWindow" Height="450" Width="800" Loaded="Window_Loaded" Closing="Window_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="200" />
@@ -19,8 +19,11 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
             <StackPanel Margin="10">
+                <ComboBox x:Name="cmbKeepItems">
+                </ComboBox>
                 <Button x:Name="btnLoadImage" Click="btnLoadImage_Click">Load Image</Button>
                 <Button x:Name="btnFindAllSimilar" Click="btnFindAllSimilar_Click">Find Similar</Button>
+                <TextBox x:Name="txtPosition" TextChanged="txtPosition_TextChanged"></TextBox>
             </StackPanel>
             <TextBlock x:Name="txtInfo" Grid.Row="1">aaaa</TextBlock>
         </Grid>

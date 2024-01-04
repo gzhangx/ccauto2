@@ -7,6 +7,7 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -26,9 +27,11 @@ namespace ccauto.Marker
     /// </summary>
     public partial class MarkerWindow : Window
     {
-        public MarkerWindow()
+        Window parent;
+        public MarkerWindow(Window parent)
         {
             InitializeComponent();
+            this.parent = parent;
         }
 
         Mat origImage = null;
@@ -87,6 +90,22 @@ namespace ccauto.Marker
         Point mouseUpP;
         EasyRect curSelRect = null;
 
+        bool pragmaticlyChangingTxtPositin = false;
+        void UpdatePosition()
+        {
+            try
+            {
+                pragmaticlyChangingTxtPositin = true;
+                if (mouseDownP.X < 0) return;
+                txtPosition.Text = mouseDownP.X.ToString("0") + "," + ((int)mouseDownP.Y);
+                if (curSelRect == null) return;
+                txtPosition.Text = curSelRect.X + "," + curSelRect.Y + "," + curSelRect.Width + "," + curSelRect.Height;
+            } finally
+            {
+                pragmaticlyChangingTxtPositin = false;
+            }
+        }
+
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             canvImg.MouseLeftButtonDown += (s, mouseE) =>
@@ -98,6 +117,7 @@ namespace ccauto.Marker
                 mouseE.Handled = true;
                 mouseDspRect.Width = 0; mouseDspRect.Height = 0;
                 mouseDspRect.Visibility = Visibility.Visible;
+                UpdatePosition();
             };
             canvImg.MouseLeftButtonUp += (s, mouseE) =>
             {
@@ -126,9 +146,15 @@ namespace ccauto.Marker
                 });
                 if (mouseDownP.X < 0) return;
                 if (mouseUpP.X >= 0) return;                
-                SelectCropImage(r);                
+                SelectCropImage(r);
+                UpdatePosition();
             };
 
+            for (int i = 0; i < 10; i++)
+            {
+                cmbKeepItems.Items.Add((i+1).ToString());
+            }
+            cmbKeepItems.SelectedIndex = 5;
             DebugQuick();
 
         }
@@ -150,6 +176,7 @@ namespace ccauto.Marker
             selectedMat = new Mat(origImage, r.toRectangle());
             Canvas.SetLeft(mouseDspRect, r.X);
             Canvas.SetTop(mouseDspRect, r.Y);
+            mouseDspRect.Visibility = Visibility.Visible;
             mouseDspRect.Width = r.Width;
             mouseDspRect.Height = r.Height;
             return true;
@@ -186,7 +213,7 @@ namespace ccauto.Marker
             }
 
             Mat newMat = origImage.Clone();
-            var lists = GCvUtils.templateMatch(selectedMat, origImage);
+            var lists = GCvUtils.templateMatch(selectedMat, origImage, cmbKeepItems.SelectedIndex);
             foreach (var item in lists)
             {
                 //Console.WriteLine("doing at "+item.X+"/"+item.Y);
@@ -197,6 +224,31 @@ namespace ccauto.Marker
             var imgBuf = GCvUtils.MatToBuff(newMat);
             //imgBuf = GCvUtils.MatToBuff(origImage);
             ShowImageFromBytes(imgBuf);
+        }
+
+        private void txtPosition_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (pragmaticlyChangingTxtPositin) return;
+            var text = txtPosition.Text;
+            Regex reg = new Regex("(?<x>\\d+),(?<y>\\d+),(?<w>\\d+),(?<h>\\d+)");
+            var match = reg.Match(text);
+            if (!match.Success)
+            {
+                return;
+            }
+            ;
+            
+            var r = new EasyRect();
+            r.X = int.Parse(match.Groups["x"].Value);
+            r.Y = int.Parse(match.Groups["y"].Value);
+            r.Width = int.Parse(match.Groups["w"].Value);  
+            r.Height = int.Parse(match.Groups["h"].Value); 
+            SelectCropImage(r);
+        }
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            parent.Close();
         }
     }
 }

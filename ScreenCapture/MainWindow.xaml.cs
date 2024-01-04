@@ -347,7 +347,7 @@ namespace ccAuto2
 
         private void btnMarkerWin_Click(object sender, RoutedEventArgs e)
         {
-            var win = new MarkerWindow();
+            var win = new MarkerWindow(this);
             win.Show();
         }
 
