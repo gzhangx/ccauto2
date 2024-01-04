@@ -26,34 +26,73 @@ namespace ccauto.Marker
             return bytes;
         }
 
-        public static List<Point> templateMatch(Mat template, Mat img, float threasHold = 1000.9f, Mat mask = null)
+        public class MatchPoints
         {
-            List<Point> points = new List<Point>();
-            Mat res = new Mat();
+            public int X;
+            public int Y;
+            public long val;
+            public MatchPoints(int x, int y, float val)
+            {
+                X = x;
+                Y = y;
+                this.val = (long)val;
+            }
+
+            public System.Drawing.Point ToPoint()
+            {
+                return new System.Drawing.Point(X, Y);
+            }
+        }
+        public static List<MatchPoints> templateMatch(Mat template, Mat img,  int keep = 20, Mat mask = null)
+        {
+            List<MatchPoints> points = new List<MatchPoints>();
+            Mat res = new Mat();            
             CvInvoke.MatchTemplate(img, template, res, Emgu.CV.CvEnum.TemplateMatchingType.Sqdiff, mask);
             var thres = res.GetData();
-            float max = 0;
-            float min = 1000;
+            int TooCloseDist = template.Width / 2;
+            if (TooCloseDist < 2) TooCloseDist = 2;
+
+
             for (int y = 0; y < thres.GetLength(0); y++)
             {
                 for (int x = 0; x < thres.GetLength(1); x++)
                 {
                     var value = (float)thres.GetValue(y, x);
                     value = Math.Abs(value);
-                    if (value < min)
+                    if(points.Count == 0) points.Add(new MatchPoints(x,y,value));                    
+                    if (points.Last().val > value || points.Count < keep)
                     {
-                        min = value;
-                        Console.WriteLine("min at"+x+"/"+y+" " + min);
-                    }
-                    if (value > max) max = value;
-                    
-                    if (Math.Abs(value) < threasHold)
-                    {
-                        points.Add(new Point(x, y));
-                    }
+
+                        bool tooClose = false;
+                        foreach (var item in points)
+                        {
+                            if (Math.Abs(item.X - x) <= TooCloseDist
+                                && Math.Abs(item.Y - y) <= TooCloseDist)
+                            {
+                                if (item.val < value)
+                                {
+                                    tooClose = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (tooClose) continue;
+                        if (points.Count > keep)
+                            points.RemoveAt(points.Count - 1);
+                        points.Add(new MatchPoints(x, y, value));
+                        points.Sort((a, b) => { 
+                            return (int)(a.val - b.val);
+                        });
+                        Console.Write("====>");
+                        foreach (var item in points)
+                        {
+                            Console.Write("("+item.X+","+item.Y+")="+item.val);
+                            Console.Write(",");
+                        }
+                        Console.WriteLine();
+                    }                                                            
                 }
-            }
-            Console.WriteLine("min=" + min + " max=" + max);
+            }            
             return points;
         }
     }

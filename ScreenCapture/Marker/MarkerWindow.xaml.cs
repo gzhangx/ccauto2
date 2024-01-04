@@ -121,8 +121,17 @@ namespace ccauto.Marker
                 if (mouseUpP.X >= 0) return;
                 Point p = mouseE.GetPosition(canvImg);
                 var r = PointsToRect(mouseDownP, p);
+                if (r.X + r.Width >= origImage.Width)
+                {
+                    r.Width = origImage.Width - r.X;
+                }
+                if (r.Y + r.Height >= origImage.Height)
+                {
+                    r.Height = origImage.Height - r.Y;
+                }
                 if (r.Width <= 0) return;
                 if (r.Height <= 0) return;
+                
                 curSelRect = r;
                 selectedMat = new Mat(origImage, r.toRectangle());
                 Canvas.SetLeft(mouseDspRect, r.X);
@@ -133,6 +142,10 @@ namespace ccauto.Marker
                 brush.Color = System.Windows.Media.Colors.Red;
                 brush.Opacity = 0.5;
                 mouseE.Handled = true;
+                Dispatcher.Invoke(() =>
+                {
+                    txtInfo.Text = "("+p.X.ToString("0")+","+p.Y.ToString("0")+")";
+                });
             };
         }
 
@@ -155,6 +168,7 @@ namespace ccauto.Marker
             {
                 //Console.WriteLine("doing at "+item.X+"/"+item.Y);
                 CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X, (int)item.Y, selectedMat.Width, selectedMat.Height), new Emgu.CV.Structure.MCvScalar(), 1, Emgu.CV.CvEnum.LineType.EightConnected);
+                CvInvoke.PutText(newMat, item.val.ToString("0.0"), new System.Drawing.Point(item.X, item.Y-10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar());
             }
 
             var imgBuf = GCvUtils.MatToBuff(newMat);
