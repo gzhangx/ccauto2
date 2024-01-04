@@ -56,6 +56,7 @@ namespace ccAuto2
         public MainWindow()
         {
             InitializeComponent();
+            Console.WriteLine(System.IO.Path.GetDirectoryName(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName));
 
 #if DEBUG
             // Force graphicscapture.dll to load.

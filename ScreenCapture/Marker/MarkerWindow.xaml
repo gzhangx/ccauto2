@@ -21,6 +21,8 @@
             <StackPanel Margin="10">
                 <ComboBox x:Name="cmbKeepItems">
                 </ComboBox>
+                <ComboBox x:Name="cmbSavedImages">
+                </ComboBox>
                 <Button x:Name="btnLoadImage" Click="btnLoadImage_Click">Load Image</Button>
                 <Button x:Name="btnFindAllSimilar" Click="btnFindAllSimilar_Click">Find Similar</Button>
                 <TextBox x:Name="txtPosition" TextChanged="txtPosition_TextChanged"></TextBox>

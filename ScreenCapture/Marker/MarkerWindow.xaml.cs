@@ -28,10 +28,13 @@ namespace ccauto.Marker
     public partial class MarkerWindow : Window
     {
         Window parent;
+        string configDir = null;
+        Env env = new Env();
         public MarkerWindow(Window parent)
         {
             InitializeComponent();
             this.parent = parent;
+            configDir = env.getEnv("-dir");
         }
 
         Mat origImage = null;
@@ -155,8 +158,28 @@ namespace ccauto.Marker
                 cmbKeepItems.Items.Add((i+1).ToString());
             }
             cmbKeepItems.SelectedIndex = 5;
-            DebugQuick();
+            
+            cmbSavedImages.SelectionChanged += (_sne, schangeeve)=>
+            {
+                var file = cmbSavedImages.SelectedItem.ToString();
+                ShowSelectedImage(file);
 
+            };
+            initSavedImageFiles();
+            //ShowSelectedImage();
+
+        }        
+
+        void initSavedImageFiles()
+        {
+            var files = Directory.EnumerateFiles(configDir);
+            Regex reg = new Regex("test\\d+-\\d+-\\d+-\\d+.png$");
+            foreach (var file in files)
+            {
+                if (!reg.IsMatch(file)) continue;
+                cmbSavedImages.Items.Add(file);
+            }
+            if (cmbSavedImages.SelectedIndex < 0) cmbSavedImages.SelectedIndex = 0;
         }
 
         bool SelectCropImage(EasyRect r)
@@ -182,21 +205,21 @@ namespace ccauto.Marker
             return true;
         }
 
-        void DebugQuick()
+        void ShowSelectedImage(string fname)
         {
             //Debug Quick
-            var fileBytes = File.ReadAllBytes("D:\\segan\\out\\coc\\test2024-01-03-094231.png");
+            var fileBytes = File.ReadAllBytes(fname);
+            if (fileBytes == null) return;
             origImage = GCvUtils.bufToMat(fileBytes);
+            if (origImage.DataPointer  == IntPtr.Zero) {
+                MessageBox.Show("Invalid file " + fname);
+                return;
+            }
             //Bitmap bmp = (Bitmap)Bitmap.FromFile(openFileDialog.FileName);  
 
             ShowImageFromBytes(fileBytes);
-            SelectCropImage(new EasyRect()
-            {
-                X=235,
-                Y=331,
-                Width=25,
-                Height=24,
-            });
+
+            //SelectCropImage(new EasyRect() { X=235, Y=331, Width=25, Height=24,});
         }
 
         private void btnFindAllSimilar_Click(object sender, RoutedEventArgs e)
