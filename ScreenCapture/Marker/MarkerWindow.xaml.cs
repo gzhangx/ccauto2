@@ -153,12 +153,12 @@ namespace ccauto.Marker
             var lists = GCvUtils.templateMatch(selectedMat, origImage);
             foreach (var item in lists)
             {
-                Console.WriteLine("doing at "+item.X+"/"+item.Y);
+                //Console.WriteLine("doing at "+item.X+"/"+item.Y);
                 CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X, (int)item.Y, selectedMat.Width, selectedMat.Height), new Emgu.CV.Structure.MCvScalar(), 1, Emgu.CV.CvEnum.LineType.EightConnected);
             }
 
             var imgBuf = GCvUtils.MatToBuff(newMat);
-            imgBuf = GCvUtils.MatToBuff(origImage);
+            //imgBuf = GCvUtils.MatToBuff(origImage);
             ShowImageFromBytes(imgBuf);
         }
     }
