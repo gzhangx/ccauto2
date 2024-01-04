@@ -1,4 +1,6 @@
-﻿using Emgu.CV.Face;
+﻿using Emgu.CV;
+using Emgu.CV.Face;
+using Emgu.CV.Util;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -10,7 +12,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
 using System.Windows.Documents;
-using System.Windows.Forms;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -30,22 +31,32 @@ namespace ccauto.Marker
             InitializeComponent();
         }
 
+        Mat origImage = null;
+        Mat selectedMat = null;
         private void btnLoadImage_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            var openFileDialog = new System.Windows.Forms.OpenFileDialog();
             if (openFileDialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
+                var fileBytes = File.ReadAllBytes(openFileDialog.FileName);
+                origImage = GCvUtils.bufToMat(fileBytes);
                 //Bitmap bmp = (Bitmap)Bitmap.FromFile(openFileDialog.FileName);  
-                using (Stream memory = File.OpenRead(openFileDialog.FileName))
-                {
-                    memory.Position = 0;
-                    BitmapImage bitmapimage = new BitmapImage();
-                    bitmapimage.BeginInit();
-                    bitmapimage.StreamSource = memory;
-                    bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
-                    bitmapimage.EndInit();
-                    canvImg.Source = bitmapimage;
-                }
+
+                ShowImageFromBytes(fileBytes);
+            }
+        }
+
+        void ShowImageFromBytes(byte[] buf)
+        {            
+            using (Stream memory = new MemoryStream(buf))
+            {
+                memory.Position = 0;
+                BitmapImage bitmapimage = new BitmapImage();
+                bitmapimage.BeginInit();
+                bitmapimage.StreamSource = memory;
+                bitmapimage.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapimage.EndInit();
+                canvImg.Source = bitmapimage;
             }
         }
 
@@ -113,6 +124,7 @@ namespace ccauto.Marker
                 if (r.Width <= 0) return;
                 if (r.Height <= 0) return;
                 curSelRect = r;
+                selectedMat = new Mat(origImage, r.toRectangle());
                 Canvas.SetLeft(mouseDspRect, r.X);
                 Canvas.SetTop(mouseDspRect, r.Y);
                 mouseDspRect.Width = r.Width;
@@ -122,6 +134,32 @@ namespace ccauto.Marker
                 brush.Opacity = 0.5;
                 mouseE.Handled = true;
             };
+        }
+
+        private void btnFindAllSimilar_Click(object sender, RoutedEventArgs e)
+        {
+            if (origImage == null)
+            {
+                MessageBox.Show("No image");
+                return;
+            }
+            if (selectedMat == null)
+            {
+                MessageBox.Show("Nothing selected");
+                return;
+            }
+
+            Mat newMat = origImage.Clone();
+            var lists = GCvUtils.templateMatch(selectedMat, origImage);
+            foreach (var item in lists)
+            {
+                Console.WriteLine("doing at "+item.X+"/"+item.Y);
+                CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X, (int)item.Y, selectedMat.Width, selectedMat.Height), new Emgu.CV.Structure.MCvScalar(), 1, Emgu.CV.CvEnum.LineType.EightConnected);
+            }
+
+            var imgBuf = GCvUtils.MatToBuff(newMat);
+            imgBuf = GCvUtils.MatToBuff(origImage);
+            ShowImageFromBytes(imgBuf);
         }
     }
 }

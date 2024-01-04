@@ -69,7 +69,7 @@ namespace ccAuto2
         }
         public static Mat bufToMat(byte[] buf)
         {
-            return ccauto.Marker.CvUtils.bufToMat(buf);
+            return ccauto.Marker.GCvUtils.bufToMat(buf);
         }
     }
 }

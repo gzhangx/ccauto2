@@ -66,7 +66,7 @@
     <Compile Include="GenCapture.cs" />
     <Compile Include="ImageLoader.cs" />
     <Compile Include="MainCaptureCreator.cs" />
-    <Compile Include="Marker\CvUtils.cs" />
+    <Compile Include="Marker\GCvUtils.cs" />
     <Compile Include="Marker\MarkerWindow.xaml.cs">
       <DependentUpon>MarkerWindow.xaml</DependentUpon>
     </Compile>

@@ -19,6 +19,10 @@ namespace ccauto
         public int Y;
         public int Width;
         public int Height;
+        public System.Drawing.Rectangle toRectangle()
+        {
+            return new Rectangle(X, Y, Width, Height);
+        }
     }
     internal class DoSam
     {
