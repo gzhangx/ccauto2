@@ -52,29 +52,37 @@ namespace ccauto.Marker
             int TooCloseDist = template.Width / 2;
             if (TooCloseDist < 2) TooCloseDist = 2;
 
-
+            List<MatchPoints> removes = new List<MatchPoints>();
             for (int y = 0; y < thres.GetLength(0); y++)
             {
                 for (int x = 0; x < thres.GetLength(1); x++)
                 {
                     var value = (float)thres.GetValue(y, x);
                     value = Math.Abs(value);
-                    if(points.Count == 0) points.Add(new MatchPoints(x,y,value));                    
+                    if(points.Count == 0) points.Add(new MatchPoints(x,y,value));                                        
                     if (points.Last().val > value || points.Count < keep)
                     {
 
                         bool tooClose = false;
+                        removes.Clear();
                         foreach (var item in points)
                         {
                             if (Math.Abs(item.X - x) <= TooCloseDist
                                 && Math.Abs(item.Y - y) <= TooCloseDist)
                             {
-                                if (item.val < value)
+                                if (item.val <= value)
                                 {
                                     tooClose = true;
                                     break;
+                                } else
+                                {
+                                    removes.Add(item);
                                 }
                             }
+                        }
+                        foreach (var item in removes)
+                        {
+                            points.Remove(item);
                         }
                         if (tooClose) continue;
                         if (points.Count > keep)
@@ -83,16 +91,17 @@ namespace ccauto.Marker
                         points.Sort((a, b) => { 
                             return (int)(a.val - b.val);
                         });
-                        Console.Write("====>");
-                        foreach (var item in points)
-                        {
-                            Console.Write("("+item.X+","+item.Y+")="+item.val);
-                            Console.Write(",");
-                        }
-                        Console.WriteLine();
+                        
                     }                                                            
                 }
-            }            
+            }
+            Console.Write("====>");
+            foreach (var item in points)
+            {
+                Console.Write("(" + item.X + "," + item.Y + ")=" + item.val);
+                Console.Write(",");
+            }
+            Console.WriteLine();
             return points;
         }
     }

@@ -191,7 +191,7 @@ namespace ccauto.Marker
             {
                 //Console.WriteLine("doing at "+item.X+"/"+item.Y);
                 CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X, (int)item.Y, selectedMat.Width, selectedMat.Height), new Emgu.CV.Structure.MCvScalar(), 1, Emgu.CV.CvEnum.LineType.EightConnected);
-                CvInvoke.PutText(newMat, item.val.ToString("0.0"), new System.Drawing.Point(item.X, item.Y-10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar());
+                CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y-10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
             }
 
             var imgBuf = GCvUtils.MatToBuff(newMat);
