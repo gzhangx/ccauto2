@@ -64,15 +64,12 @@ namespace ccAuto2
 
         public double CompareFromArray(byte[] data, ImageStore stored)
         {
-            Mat omat = new Mat();
-            CvInvoke.Imdecode(data, Emgu.CV.CvEnum.ImreadModes.AnyDepth, omat);
+            Mat omat = bufToMat(data);            
             return CompareToMat(omat, stored);
         }
         public static Mat bufToMat(byte[] buf)
         {
-            Mat omat = new Mat();
-            CvInvoke.Imdecode(buf, Emgu.CV.CvEnum.ImreadModes.Color, omat);
-            return omat;
+            return ccauto.Marker.CvUtils.bufToMat(buf);
         }
     }
 }
