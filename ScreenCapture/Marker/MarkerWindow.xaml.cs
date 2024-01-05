@@ -1,24 +1,12 @@
 ﻿using Emgu.CV;
-using Emgu.CV.Face;
-using Emgu.CV.Util;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Security.Permissions;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
-using Windows.Storage.Streams;
 using Point = System.Windows.Point;
 
 namespace ccauto.Marker
@@ -31,6 +19,47 @@ namespace ccauto.Marker
         Window parent;
         string configDir = null;
         Env env = new Env();
+        string[] classNames = new string[0];
+
+        List<YoloLabels> yoloLabels = new List<YoloLabels>();
+        const string YOLO_IMAGES_DIR = "images";
+        const string YOLO_LABELS_DIR = "labels";
+
+        int AllImageWidth = 0, AllImageHeight = 0;
+        class YoloLabels
+        {
+            public int x, y, w, h, labelIndex;
+            public string label;
+            public string ToSaveString(int width, int height)
+            {
+                Func<double,string> toFixedStr = (double v)=>v.ToString("0.0000000000");
+                Func<int, string> toFixedStrW = (int v) => toFixedStr(v * 1.0 / width);
+                Func<int, string> toFixedStrH = (int v) => toFixedStr(v * 1.0 / height);
+                return labelIndex + " " + toFixedStrW((x + (w / 2)))+" "+toFixedStrH(y+(h/2))
+                    +" "+ toFixedStrW(w)+" "+toFixedStrH(h);
+            }
+            void initFromCfgLine(string str, int width, int height)
+            {
+                var parts = str.Split(' ');
+                labelIndex = int.Parse(parts[0]);
+                double cx = double.Parse(parts[1])*width;
+                double cy = double.Parse(parts[2])*height;
+                double w = double.Parse(parts[3])*width;
+                double h = double.Parse(parts[4])*height;
+                double x = cx - (w / 2);
+                double y = cy - (h / 2);
+                this.x = (int)x; this.y = (int)y;
+                this.w = (int)w; this.h = (int)h;
+            }
+            public static YoloLabels getFromLine(string str, int w, int h, string[] classNames)
+            {
+                YoloLabels labels = new YoloLabels();
+                labels.initFromCfgLine(str, w,h);
+                labels.label = classNames[labels.labelIndex];
+                return labels;
+            }
+        }
+        
         public MarkerWindow(Window parent)
         {
             InitializeComponent();
@@ -163,6 +192,7 @@ namespace ccauto.Marker
             cmbSavedImages.SelectionChanged += (_sne, schangeeve)=>
             {
                 var file = cmbSavedImages.SelectedItem.ToString();
+                loadLabelFileForImage(file);
                 ShowSelectedImage(file);
 
             };
@@ -170,20 +200,49 @@ namespace ccauto.Marker
             initSavedImageFiles();
             //ShowSelectedImage();
 
-        }        
+        }
+
+        string getYoloLabelNameFromFullPath(string fullPath)
+        {
+            var fname = System.IO.Path.GetFileNameWithoutExtension(fullPath);
+            var labelFileName = configDir + "\\" + YOLO_LABELS_DIR+ "\\" + fname + ".txt";
+            return labelFileName;
+        }
+        void loadLabelFileForImage(string fullPath)
+        {            
+            var labelFileName = getYoloLabelNameFromFullPath(fullPath);
+
+            string[] labelLines = null;
+            try
+            {
+                labelLines = File.ReadAllLines(labelFileName);
+            } catch { }
+            if (labelLines != null)
+            {
+                foreach (var line in labelLines)
+                {
+                    //0 0.cx 0.cy 0.w 0.h
+                    yoloLabels.Add(YoloLabels.getFromLine(line, AllImageWidth, AllImageHeight, classNames));
+                }
+            }
+        }
 
         void initClasses()
         {
-            var lines = File.ReadAllLines(configDir + "\\names.txt");
-            foreach (var line in lines)
+            classNames = File.ReadAllLines(configDir + "\\names.txt");
+            for (int i = 0; i < classNames.Length; i++)
             {
-                cmbClassNames.Items.Add(line.Trim());
+                classNames[i] = classNames[i].Trim();
+            }
+            foreach (var line in classNames)
+            {
+                cmbClassNames.Items.Add(line);
             }
             if (cmbClassNames.SelectedIndex < 0) cmbClassNames.SelectedIndex = 0;
         }
         void initSavedImageFiles()
         {
-            var files = Directory.EnumerateFiles(configDir+"\\images");
+            var files = Directory.EnumerateFiles(configDir+"\\"+ YOLO_IMAGES_DIR);
             Regex reg = new Regex("test\\d+-\\d+-\\d+-\\d+.png$");
             foreach (var file in files)
             {
@@ -222,6 +281,8 @@ namespace ccauto.Marker
             var fileBytes = File.ReadAllBytes(fname);
             if (fileBytes == null) return;
             origImage = GCvUtils.bufToMat(fileBytes);
+            AllImageWidth = origImage.Width;
+            AllImageHeight = origImage.Height;
             if (origImage.DataPointer  == IntPtr.Zero) {
                 MessageBox.Show("Invalid file " + fname);
                 return;
