@@ -388,7 +388,7 @@ namespace ccauto.Marker
             var recs = NumberSplitter.SplitCocNumbers(selectedMat);            
             Mat newMat = origImage.Clone();
 
-            if (curSelRect.Width < 200 && curSelRect.Height < 100)
+            if (curSelRect.Width < 200 && curSelRect.Height < 100 && false)
             {
                 SaveImageAsPPM(selectedMat, configDir+"/selppm.txt"); 
             }
