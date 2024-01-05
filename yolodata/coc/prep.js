@@ -27,7 +27,15 @@ function createFiles() {
     const notMatchedLabels = Object.values(imageNameToLabel).filter(f => !f.matched).map(f => f.lblName);
     if (notMatchedLabels.length) console.log(notMatchedLabels, "not matched labels");
     console.log(goodImgNames);
-    fs.writeFileSync('train.txt', goodImgNames.map(l=>`coc/images/${l}`).join('\n'))
+    fs.writeFileSync('train.txt', goodImgNames.map(l => `coc/images/${l}`).join('\n'))
+    
+    const names = fs.readFileSync('names.txt').toString().split('\n').filter(x=>x.trim())
+    fs.writeFileSync('data.txt', `classes=${names.length}
+train = train.txt
+valid = train.txt
+names = names.txt
+backup = backup/
+`)
 }
 
 createFiles();
