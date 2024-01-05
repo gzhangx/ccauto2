@@ -22,6 +22,8 @@ namespace ccauto.Marker
         string[] classNames = new string[0];
 
         List<YoloLabels> yoloLabels = new List<YoloLabels>();
+
+        List<YoloLabels> notCommitedLabels = new List<YoloLabels>();
         const string YOLO_IMAGES_DIR = "images";
         const string YOLO_LABELS_DIR = "labels";
 
@@ -209,7 +211,8 @@ namespace ccauto.Marker
             return labelFileName;
         }
         void loadLabelFileForImage(string fullPath)
-        {            
+        {
+            yoloLabels.Clear();
             var labelFileName = getYoloLabelNameFromFullPath(fullPath);
 
             string[] labelLines = null;
@@ -221,6 +224,7 @@ namespace ccauto.Marker
             {
                 foreach (var line in labelLines)
                 {
+                    if (line.Trim().Length == 0) continue;
                     //0 0.cx 0.cy 0.w 0.h
                     yoloLabels.Add(YoloLabels.getFromLine(line, AllImageWidth, AllImageHeight, classNames));
                 }
@@ -289,7 +293,8 @@ namespace ccauto.Marker
             }
             //Bitmap bmp = (Bitmap)Bitmap.FromFile(openFileDialog.FileName);  
 
-            ShowImageFromBytes(fileBytes);
+            //ShowImageFromBytes(fileBytes);
+            showYoloLabels(yoloLabels, null, true);
 
             //SelectCropImage(new EasyRect() { X=235, Y=331, Width=25, Height=24,});
         }
@@ -307,15 +312,36 @@ namespace ccauto.Marker
                 return;
             }
 
-            Mat newMat = origImage.Clone();
+            notCommitedLabels.Clear();
+            //Mat newMat = origImage.Clone();            
             var lists = GCvUtils.templateMatch(selectedMat, origImage, cmbKeepItems.SelectedIndex);
+            //foreach (var item in lists)
+            //{
+            //    //Console.WriteLine("doing at "+item.X+"/"+item.Y);
+            //    CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X, (int)item.Y, selectedMat.Width, selectedMat.Height), new Emgu.CV.Structure.MCvScalar(), 1, Emgu.CV.CvEnum.LineType.EightConnected);
+            //    CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y-10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
+            //}
+
+            //var imgBuf = GCvUtils.MatToBuff(newMat);
+            ////imgBuf = GCvUtils.MatToBuff(origImage);
+            //ShowImageFromBytes(imgBuf);
             foreach (var item in lists)
             {
-                //Console.WriteLine("doing at "+item.X+"/"+item.Y);
-                CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X, (int)item.Y, selectedMat.Width, selectedMat.Height), new Emgu.CV.Structure.MCvScalar(), 1, Emgu.CV.CvEnum.LineType.EightConnected);
-                CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y-10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
+                var label = new YoloLabels();
+                label.x = item.X; label.y = item.Y;
+                label.w = selectedMat.Width; label.h = selectedMat.Height;
+                label.label = cmbClassNames.SelectedItem.ToString();
+                label.labelIndex = cmbKeepItems.SelectedIndex - 1;
+                notCommitedLabels.Add(label);
             }
+            showYoloAndUncommitedLabels();
+        }
 
+        void showYoloAndUncommitedLabels()
+        {
+            Mat newMat = origImage.Clone();
+            showYoloLabels(yoloLabels, newMat);
+            showYoloLabels(notCommitedLabels, newMat);
             var imgBuf = GCvUtils.MatToBuff(newMat);
             //imgBuf = GCvUtils.MatToBuff(origImage);
             ShowImageFromBytes(imgBuf);
@@ -369,17 +395,49 @@ namespace ccauto.Marker
 
             var clr = new Emgu.CV.Structure.MCvScalar();
             var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
+            showYoloLabels(yoloLabels, newMat);
             foreach (var item in recs)
             {
                 //Console.WriteLine("doing at "+item.X+"/"+item.Y);
                 CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X + curSelRect.X, (int)item.Y + curSelRect.Y, item.Width, item.Height), clr, 1, lineType);
                 //CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y - 10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
-            }
-
+            }            
             var imgBuf = GCvUtils.MatToBuff(newMat);
             //imgBuf = GCvUtils.MatToBuff(origImage);
             ShowImageFromBytes(imgBuf);
             txtInfo.Text = "Splited " + recs.Count + " parts";
+        }
+
+        void showYoloLabels(List<YoloLabels> labels, Mat newMat, bool show=false)
+        {
+            if (newMat == null) newMat = origImage.Clone();
+            var clr = new Emgu.CV.Structure.MCvScalar();
+            clr.V0 = 1;
+            var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
+            foreach (var item in labels)
+            {
+                //Console.WriteLine("doing at "+item.X+"/"+item.Y);
+                CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle(item.x, item.y, item.w, item.h), clr, 1, lineType);
+                CvInvoke.PutText(newMat, item.label, new System.Drawing.Point(item.x, item.y - 10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, clr, 2);
+            }
+
+            if (show)
+            {
+                var imgBuf = GCvUtils.MatToBuff(newMat);
+                ShowImageFromBytes(imgBuf);
+            }
+        }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+            yoloLabels.AddRange(notCommitedLabels);
+            var labelFileName = getYoloLabelNameFromFullPath(cmbSavedImages.SelectedItem.ToString());
+            var lines = new List<string>();
+            foreach (var item in yoloLabels)
+            {
+                lines.Add(item.ToSaveString(AllImageWidth, AllImageHeight)+"\n");
+            }
+            File.WriteAllLines(labelFileName, lines.ToArray());
         }
 
         public static void SaveImageAsPPM(Mat mat, string fileName)

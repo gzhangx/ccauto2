@@ -30,6 +30,7 @@
                 <Button x:Name="btnSplitNumber" Click="btnSplitNumber_Click">Split Number</Button>
                 <TextBox x:Name="txtSplitMatchNumber" Text="SplitNumberMatch"></TextBox>
                 <TextBox x:Name="txtPosition" TextChanged="txtPosition_TextChanged"></TextBox>
+                <Button x:Name="btnSave" Click="btnSave_Click">Save</Button>
             </StackPanel>
             <TextBlock x:Name="txtInfo" Grid.Row="1">aaaa</TextBlock>
         </Grid>
