@@ -28,10 +28,12 @@ namespace ccauto
     {
         public static void ExecuteSamProcess(EventRequester.RequestAndResult samResult, EasyRect selRect, Action endAction, bool doSam = true)
         {
+            Env env = new Env();
+            var configDir = env.getEnv("-dir");
             samResult.doRequest(tbf =>
             {
                 var tmStr = DateTime.Now.ToString("yyyy-MM-dd-HHmmss");
-                var fileName = "d:\\segan\\out\\coc\\test" + tmStr + ".png";
+                var fileName = configDir+"\\"+ MarkerWindow.YOLO_IMAGES_DIR+"\\test" + tmStr + ".png";
                 if (selRect != null)
                 {
                     using (var srcBmp = Bitmap.FromStream(new MemoryStream(tbf)))

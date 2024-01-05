@@ -24,8 +24,8 @@ namespace ccauto.Marker
         List<YoloLabels> yoloLabels = new List<YoloLabels>();
 
         List<YoloLabels> notCommitedLabels = new List<YoloLabels>();
-        const string YOLO_IMAGES_DIR = "images";
-        const string YOLO_LABELS_DIR = "labels";
+        public readonly static string YOLO_IMAGES_DIR = "images";
+        readonly static string YOLO_LABELS_DIR = "labels";
 
         int AllImageWidth = 0, AllImageHeight = 0;
         class YoloLabels
@@ -393,18 +393,55 @@ namespace ccauto.Marker
                 SaveImageAsPPM(selectedMat, configDir+"/selppm.txt"); 
             }
 
-            var clr = new Emgu.CV.Structure.MCvScalar();
-            var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
-            showYoloLabels(yoloLabels, newMat);
-            foreach (var item in recs)
+
+            //var clr = new Emgu.CV.Structure.MCvScalar();
+            //var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
+            //showYoloLabels(yoloLabels, newMat);
+            notCommitedLabels.Clear();
+            Action<char, YoloLabels> setLabel = (c, lbl) =>
             {
+                if (c >= '0' && c <= '9')
+                {
+                    lbl.labelIndex = c - '0';
+                    lbl.label = c.ToString();
+                }else if (c == '/')
+                {
+                    for (int i = 0; i < classNames.Length; i++)
+                    {
+                        if (String.Equals(classNames[i], c.ToString()))
+                        {
+                            lbl.labelIndex = i;
+                            break;
+                        }
+                    }                    
+                    lbl.label = c.ToString();
+                } else
+                {
+                    lbl.labelIndex = -1;
+                    lbl.label = "NOT FOUND";
+                }
+            };
+            for (var i = 0; i <recs.Count; i++)
+            {
+                var item = recs[i];
+                char nameofChar = txtSplitMatchNumber.Text.Length > i ? txtSplitMatchNumber.Text[i] : 'N';
+
                 //Console.WriteLine("doing at "+item.X+"/"+item.Y);
-                CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X + curSelRect.X, (int)item.Y + curSelRect.Y, item.Width, item.Height), clr, 1, lineType);
+                //CvInvoke.Rectangle(newMat, new System.Drawing.Rectangle((int)item.X + curSelRect.X, (int)item.Y + curSelRect.Y, item.Width, item.Height), clr, 1, lineType);
+                YoloLabels label = new YoloLabels();
+                label.x = item.X + curSelRect.X;
+                label.y = item.Y + curSelRect.Y;
+                label.w = item.Width;
+                label.h = item.Height;  
+                //label.labelIndex = cmbClassNames.SelectedIndex-1;
+                //label.label = cmbClassNames.Text;
+                setLabel(nameofChar, label);
+                notCommitedLabels.Add(label);
                 //CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y - 10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
             }            
-            var imgBuf = GCvUtils.MatToBuff(newMat);
-            //imgBuf = GCvUtils.MatToBuff(origImage);
-            ShowImageFromBytes(imgBuf);
+            //var imgBuf = GCvUtils.MatToBuff(newMat);            
+            //ShowImageFromBytes(imgBuf);
+            showYoloAndUncommitedLabels();
             txtInfo.Text = "Splited " + recs.Count + " parts";
         }
 
@@ -435,7 +472,7 @@ namespace ccauto.Marker
             var lines = new List<string>();
             foreach (var item in yoloLabels)
             {
-                lines.Add(item.ToSaveString(AllImageWidth, AllImageHeight)+"\n");
+                lines.Add(item.ToSaveString(AllImageWidth, AllImageHeight));
             }
             File.WriteAllLines(labelFileName, lines.ToArray());
         }
