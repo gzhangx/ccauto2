@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Imaging;
+using Windows.Devices.Lights.Effects;
 using Point = System.Windows.Point;
 
 namespace ccauto.Marker
@@ -22,6 +23,7 @@ namespace ccauto.Marker
         string[] classNames = new string[0];
 
         List<YoloLabels> yoloLabels = new List<YoloLabels>();
+        YoloLabels curSelectedLabel = null;
 
         List<YoloLabels> notCommitedLabels = new List<YoloLabels>();
         public readonly static string YOLO_IMAGES_DIR = "images";
@@ -84,8 +86,11 @@ namespace ccauto.Marker
             }
         }
 
+        //int debugImageCount = 0;
         void ShowImageFromBytes(byte[] buf)
-        {            
+        {
+            //debugImageCount++;
+            //File.WriteAllBytes("d:\\temp\\out" + debugImageCount + ".bmp", buf);
             using (Stream memory = new MemoryStream(buf))
             {
                 memory.Position = 0;
@@ -146,6 +151,18 @@ namespace ccauto.Marker
             canvImg.MouseLeftButtonDown += (s, mouseE) =>
             {
                 Point p = mouseE.GetPosition(canvImg);
+
+                foreach(var lbl in yoloLabels)
+                {
+                    if (lbl.x <= p.X && (lbl.x+lbl.w) > p.X
+                    && lbl.y <= p.Y && (lbl.y+lbl.h) > p.Y)
+                    {
+                        curSelectedLabel = lbl;
+                        cmbClassNames.SelectedIndex = lbl.labelIndex;
+                        return;
+                    }
+                }
+                curSelectedLabel = null;
                 mouseDownP = p;
                 mouseUpP.X = -1;
                 canvImg.CaptureMouse();
@@ -201,6 +218,12 @@ namespace ccauto.Marker
             initClasses();
             initSavedImageFiles();
             //ShowSelectedImage();
+            cmbClassNames.SelectionChanged += (cmbClassNames_snder, cmbClassNames_eve) =>
+            {
+                if (curSelectedLabel == null) return;
+                curSelectedLabel.labelIndex = cmbClassNames.SelectedIndex;
+                curSelectedLabel.label = cmbClassNames.Text;
+            };
 
         }
 
@@ -259,7 +282,13 @@ namespace ccauto.Marker
                 if (!reg.IsMatch(file)) continue;
                 cmbSavedImages.Items.Add(file);
             }
-            if (cmbSavedImages.SelectedIndex < 0) cmbSavedImages.SelectedIndex = 0;
+            if (cmbSavedImages.Items.Count > 0)
+            {
+                Mat mat = CvInvoke.Imread(cmbSavedImages.Items[0].ToString());
+                AllImageWidth = mat.Width;
+                AllImageHeight = mat.Height;
+                if (cmbSavedImages.SelectedIndex < 0) cmbSavedImages.SelectedIndex = 0;
+            }
         }
 
         bool SelectCropImage(EasyRect r)
@@ -319,8 +348,14 @@ namespace ccauto.Marker
             }
 
             notCommitedLabels.Clear();
+            float threadshold = 0;
+            if (!float.TryParse(txtThreadShold.Text, out threadshold))
+            {
+                MessageBox.Show("Bad threadshold " + txtThreadShold.Text);
+                return;
+            }
             //Mat newMat = origImage.Clone();            
-            var lists = GCvUtils.templateMatch(selectedMat, origImage, cmbKeepItems.SelectedIndex);
+            var lists = GCvUtils.templateMatch(selectedMat, origImage, threadshold, cmbKeepItems.SelectedIndex);
             //foreach (var item in lists)
             //{
             //    //Console.WriteLine("doing at "+item.X+"/"+item.Y);
@@ -338,9 +373,25 @@ namespace ccauto.Marker
                 label.w = selectedMat.Width; label.h = selectedMat.Height;
                 label.label = cmbClassNames.SelectedItem.ToString();
                 label.labelIndex = cmbClassNames.SelectedIndex;
-                notCommitedLabels.Add(label);
+                if (canAddToLabels(label))
+                {
+                    notCommitedLabels.Add(label);
+                }
             }
             showYoloAndUncommitedLabels();
+        }
+
+        bool canAddToLabels(YoloLabels lbl)
+        {
+            foreach(var existing in yoloLabels)
+            {
+                if (Math.Abs(lbl.x - existing.x) < 3 && Math.Abs(lbl.y - existing.y) < 3)
+                {
+                    Console.WriteLine("label " + lbl.label + " pos=(" + lbl.x + "," + lbl.y + ") too close to "+existing.label+" pos=("+existing.x+","+existing.y+")" );
+                    return false;
+                }
+            }
+            return true;
         }
 
         void showYoloAndUncommitedLabels()
@@ -490,6 +541,19 @@ namespace ccauto.Marker
                 lines.Add(item.ToSaveString(AllImageWidth, AllImageHeight));
             }
             File.WriteAllLines(labelFileName, lines.ToArray());
+        }
+
+        private void btnDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (curSelectedLabel == null)
+            {
+                notCommitedLabels.Clear();             
+            }
+            else
+            {
+                yoloLabels.Remove(curSelectedLabel);
+            }
+            showYoloLabels(yoloLabels, null, true);
         }
 
         public static void SaveImageAsPPM(Mat mat, string fileName)

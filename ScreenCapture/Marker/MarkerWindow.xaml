@@ -36,6 +36,8 @@
                 <TextBox x:Name="txtSplitMatchNumber" Text="SplitNumberMatch"></TextBox>
                 <TextBox x:Name="txtPosition" TextChanged="txtPosition_TextChanged"></TextBox>
                 <Button x:Name="btnSave" Click="btnSave_Click">Save</Button>
+                <Button x:Name="btnDelete" Click="btnDelete_Click">Delete Selected</Button>
+                <TextBox x:Name="txtThreadShold" Text="9309026"></TextBox>
             </StackPanel>
             <TextBlock x:Name="txtInfo" Grid.Row="1">aaaa</TextBlock>
         </Grid>

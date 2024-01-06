@@ -43,7 +43,7 @@ namespace ccauto.Marker
                 return new System.Drawing.Point(X, Y);
             }
         }
-        public static List<MatchPoints> templateMatch(Mat template, Mat img,  int keep = 20, Mat mask = null)
+        public static List<MatchPoints> templateMatch(Mat template, Mat img, float threashold, int keep = 20, Mat mask = null)
         {
             List<MatchPoints> points = new List<MatchPoints>();
             Mat res = new Mat();            
@@ -59,6 +59,7 @@ namespace ccauto.Marker
                 {
                     var value = (float)thres.GetValue(y, x);
                     value = Math.Abs(value);
+                    if (value > threashold) continue;
                     if(points.Count == 0) points.Add(new MatchPoints(x,y,value));                                        
                     if (points.Last().val > value || points.Count < keep)
                     {
