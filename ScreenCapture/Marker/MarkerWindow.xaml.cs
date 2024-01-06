@@ -25,7 +25,7 @@ namespace ccauto.Marker
 
         List<YoloLabels> notCommitedLabels = new List<YoloLabels>();
         public readonly static string YOLO_IMAGES_DIR = "images";
-        readonly static string YOLO_LABELS_DIR = "labels";
+        readonly static string YOLO_LABELS_DIR = "images";
 
         int AllImageWidth = 0, AllImageHeight = 0;
         class YoloLabels
@@ -226,7 +226,13 @@ namespace ccauto.Marker
                 {
                     if (line.Trim().Length == 0) continue;
                     //0 0.cx 0.cy 0.w 0.h
-                    yoloLabels.Add(YoloLabels.getFromLine(line, AllImageWidth, AllImageHeight, classNames));
+                    try
+                    {
+                        yoloLabels.Add(YoloLabels.getFromLine(line, AllImageWidth, AllImageHeight, classNames));
+                    } catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
             }
         }
@@ -331,7 +337,7 @@ namespace ccauto.Marker
                 label.x = item.X; label.y = item.Y;
                 label.w = selectedMat.Width; label.h = selectedMat.Height;
                 label.label = cmbClassNames.SelectedItem.ToString();
-                label.labelIndex = cmbKeepItems.SelectedIndex - 1;
+                label.labelIndex = cmbClassNames.SelectedIndex;
                 notCommitedLabels.Add(label);
             }
             showYoloAndUncommitedLabels();
@@ -393,7 +399,7 @@ namespace ccauto.Marker
                 SaveImageAsPPM(selectedMat, configDir+"/selppm.txt"); 
             }
 
-
+            txtBlkWarnings.Text = "";
             //var clr = new Emgu.CV.Structure.MCvScalar();
             //var lineType = Emgu.CV.CvEnum.LineType.EightConnected;
             //showYoloLabels(yoloLabels, newMat);
@@ -419,8 +425,10 @@ namespace ccauto.Marker
                 {
                     lbl.labelIndex = -1;
                     lbl.label = "NOT FOUND";
+                    Console.WriteLine("Warning, can't find label for char " + c);                    
                 }
             };
+            string badChars = "";
             for (var i = 0; i <recs.Count; i++)
             {
                 var item = recs[i];
@@ -436,9 +444,16 @@ namespace ccauto.Marker
                 //label.labelIndex = cmbClassNames.SelectedIndex-1;
                 //label.label = cmbClassNames.Text;
                 setLabel(nameofChar, label);
-                notCommitedLabels.Add(label);
+                if (label.labelIndex > 0)
+                    notCommitedLabels.Add(label);
+                else
+                {
+                    //add warnings
+                    badChars += nameofChar + ",";
+                }
                 //CvInvoke.PutText(newMat, item.val.ToString(), new System.Drawing.Point(item.X, item.Y - 10), Emgu.CV.CvEnum.FontFace.HersheyPlain, 1, new Emgu.CV.Structure.MCvScalar(), 2);
             }            
+            if (badChars.Length > 0) txtBlkWarnings.Text = badChars;
             //var imgBuf = GCvUtils.MatToBuff(newMat);            
             //ShowImageFromBytes(imgBuf);
             showYoloAndUncommitedLabels();

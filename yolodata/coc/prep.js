@@ -39,4 +39,5 @@ backup = ${__dirname}/backup/
     console.log(__dirname);
 }
 
+//https://github.com/pjreddie/darknet/issues/2263
 createFiles();

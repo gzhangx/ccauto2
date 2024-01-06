@@ -11,7 +11,12 @@
             <ColumnDefinition Width="200" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition></RowDefinition>
+            <RowDefinition Height="auto"></RowDefinition>
+        </Grid.RowDefinitions>
 
+        <TextBlock x:Name="txtBlkWarnings" Grid.Row="1"></TextBlock>
         <Grid x:Name="ControlsGrid" Grid.Column="0">
             <Grid.RowDefinitions>
                 <RowDefinition />
