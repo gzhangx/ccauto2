@@ -444,7 +444,7 @@ namespace ccauto.Marker
                 //label.labelIndex = cmbClassNames.SelectedIndex-1;
                 //label.label = cmbClassNames.Text;
                 setLabel(nameofChar, label);
-                if (label.labelIndex > 0)
+                if (label.labelIndex >= 0)
                     notCommitedLabels.Add(label);
                 else
                 {
