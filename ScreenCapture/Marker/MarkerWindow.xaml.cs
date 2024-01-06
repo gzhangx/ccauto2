@@ -341,6 +341,7 @@ namespace ccauto.Marker
                 MessageBox.Show("No image");
                 return;
             }
+            if (curSelRect != null) SelectCropImage(curSelRect);
             if (selectedMat == null)
             {
                 MessageBox.Show("Nothing selected");
